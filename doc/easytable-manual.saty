@@ -1,0 +1,53 @@
+% 注意：この文書のタイプセットには Exdesign パッケージが必要です．
+% Exdesign: (c) Naoki Kaneko and T. Suwa 2018
+%           https://github.com/puripuri2100/exdesign
+
+@require: exdesign
+@require: article-ja
+@require: code
+@require: color
+@require: hdecoset
+@import: ../src/easytable-dirtyhack
+
+% Preamble {{{
+
+% in
+% }}}
+
+document (|
+        title = {Easytable パッケージ};
+        author = {\@monaqa};
+        date = {2020/01/16};
+        show-title = true;
+        show-toc = true;
+        style = ArticleJa.a4paper ;
+        design = ArticleJa.article;
+        header-footer = ArticleJa.normalHF;
+        fonts = ArticleJa.fonts;
+|) '<
+  +section{Easytable パッケージの概要}<
+
+    +p{
+      \easytable[l;c;r]{
+        | header1 | header2 | header3
+        | align left | align center | align right
+        | a | b | c
+        |}
+    }
+
+    +p{
+      \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;l]{
+        | header1    | header2      | header3     | header4
+        | align left | align center | align right | align left
+        | align left | align center | align right | align left
+        | align left | align center | align right | align left
+        | a          | b            | c           | d
+        | a          | b            | c           | d
+        | a          | b            | c           | d
+        |}
+    }
+
+
+  >
+
+>

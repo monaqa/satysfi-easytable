@@ -1,0 +1,188 @@
+% vim: fdm=marker
+
+@require: list
+@require: gr
+@require: option
+
+% 行列（表の中身を格納するデータ構造に使用）
+type 'a matrix = ('a list) list
+
+% 罫線のパターン．
+type ruleptn = length list -> length list -> graphics list
+
+% 行を揃えるときの規則．（ここでの rule は規則の意味で罫線ではない．紛らわしいかも）
+type alignrule =
+  | AlignLeft
+  | AlignCenter
+  | AlignRight
+  % | AlignLeftWithWidth of length
+  % | AlignCenterWithWidth of length
+  % | AlignRightWithWidth of length
+
+module EasyTable: sig
+
+  % 補助的な関数
+  % val reshape: int -> 'a -> 'a list -> 'a matrix
+  % val colmap: ('a -> 'b) list -> 'a matrix -> 'b matrix
+  % val concat-ruleptn: ruleptn list -> ruleptn
+  % val align: context -> alignrule -> inline-boxes -> cell
+
+  val toprule: ruleptn
+  val bottomrule: ruleptn
+  val midrule: int -> ruleptn
+  val vertrule: int -> ruleptn
+  % val header-col-bg: color -> ruleptn
+
+  direct \easytable: [(ruleptn list)?; (alignrule list); (inline-text list)] inline-cmd
+
+end = struct
+
+  % 補助的な関数 {{{
+
+  let range n1 n2 =
+    let-rec aux min max =
+      if min == max then [min] else min :: (aux (min + 1) max)
+    in
+    if n1 < n2 then (aux n1 n2) else (aux n2 n1)
+
+  let reshape ncol dft-value lst =
+    let nrow = (List.length lst) / ncol in
+    let row-range = range 0 (nrow - 1) in
+    let col-range = range 0 (ncol - 1) in
+    let l-col-each-row row-idx =
+      List.map(
+        fun idx -> Option.from dft-value (List.nth (idx + ncol * row-idx) lst)
+      ) col-range
+    in
+    List.map l-col-each-row row-range
+
+  % 関数のリスト {f_i} 及び，それと要素数が等しいリスト {a_i} が与えられたとき，
+  % {f_i a_i} を返す関数．
+  let-rec map-each f-lst lst =
+    match f-lst with
+    | [] -> []
+    | f1::fs -> (match lst with
+                 | [] -> []
+                 | x1::xs ->  (f1 x1) :: (map-each fs xs))
+    % match (f-lst, lst) with
+    % | ([], []) -> []
+    % | ([], _)  -> []
+    % | (_, [])  -> []
+    % | ([f1 :: fs], [x1 :: xs]) -> (f1 x1) :: (map-each fs xs)
+
+  % M * N 行列 input 及び N 個の関数 f_n が与えられたとする．
+  % input の n 行目の縦ベクトルを input_n としたとき，
+  % [(f_1 input_1) (f_2 input_2) ... (f_N input_N)]
+  % の形をした行列（上の式は横方向に連なっていることを表している）を返す．
+  let colmap f-col input = List.map (map-each f-col) input
+
+  % 複数の罫線パターンを結合する．
+  let-rec concat-ruleptn ruleptn-lst xs ys =
+    match ruleptn-lst with
+    | [] -> []
+    | (ruleptn :: others) -> List.append (ruleptn xs ys) (concat-ruleptn others xs ys)
+
+  % 代数的データ型である algnrule に意味を持たせるための関数．
+  % ctx と algnrule が決まれば，inline-boxes を cell へと変換することができる．
+  % align は， ctx が与えられたときに algnrule を
+  % (inline-boxes -> cell) という関数へと変換する関数である．
+  let align ctx algnrule ib =
+    let pads =
+      let fs = ctx |> get-font-size in
+      (fs *' 0.5, fs *' 0.5, fs *' 0.4, fs *' 0.4)
+    in
+    match algnrule with
+    | AlignLeft   -> NormalCell(pads,               ib ++ inline-fil)
+    | AlignCenter -> NormalCell(pads, inline-fil ++ ib ++ inline-fil)
+    | AlignRight  -> NormalCell(pads, inline-fil ++ ib              )
+
+  % }}}
+
+  % 罫線の設定 {{{
+
+  let toprule xs ys =
+    let thick = stroke 1pt Color.black in
+    let y0 = ys |> List.nth 0 in
+    let x0 = xs |> List.nth 0 in
+    let xlast = xs |> List.reverse |> List.nth 0 in
+    match (y0, x0, xlast) with
+    | (Some(y0), Some(x0), Some(xlast)) ->
+        [thick (Gr.line (x0, y0) (xlast, y0))]
+    | _ -> []
+
+    % こう書いてもいい
+    % match ys with
+    % | (y0 :: _) ->
+    %     (match (xs, List.reverse xs) with
+    %      | (x0 :: _, xlast:: _) ->
+    %          [thick (Gr.line (x0, y0) (xlast, y0))]
+    %      | _ -> []
+    %     )
+    % | _ -> []
+
+  let bottomrule xs ys =
+    let thick = stroke 1pt Color.black in
+    let ylast = ys |> List.reverse |> List.nth 0 in
+    let x0 = xs |> List.nth 0 in
+    let xlast = xs |> List.reverse |> List.nth 0 in
+    match (ylast, x0, xlast) with
+    | (Some(ylast), Some(x0), Some(xlast)) ->
+        [thick (Gr.line (x0, ylast) (xlast, ylast))]
+    | _ -> []
+
+  let midrule idx-row xs ys =
+    let thin = stroke 0.5pt Color.black in
+    let yi = ys |> List.nth idx-row in
+    let x0 = xs |> List.nth 0 in
+    let xlast = xs |> List.reverse |> List.nth 0 in
+    match (yi, x0, xlast) with
+    | (Some(yi), Some(x0), Some(xlast)) ->
+        let x0-adj = x0 +' 2pt in
+        let xlast-adj = xlast -' 2pt in
+        [thin (Gr.line (x0-adj, yi) (xlast-adj, yi))]
+    | _ -> []
+
+  let vertrule idx-col xs ys =
+    let thin = stroke 0.5pt Color.black in
+    let xi = xs |> List.nth idx-col in
+    let y0 = ys |> List.nth 0 in
+    let ylast = ys |> List.reverse |> List.nth 0 in
+    match (xi, y0, ylast) with
+    | (Some(xi), Some(y0), Some(ylast)) ->
+        [thin (Gr.line (xi, y0) (xi, ylast))]
+    | _ -> []
+
+  % header の背景塗りつぶし．
+  % うまくいくかと思ったが，どうやら罫線の graphics は
+  % 中身を並べた後に描画されているらしく，文字の上に長方形が重なってしまうためボツ．
+  % let header-col-bg clr xs ys =
+  %   let y0 = ys |> List.nth 0 in
+  %   let y1 = ys |> List.nth 1 in
+  %   let x0 = xs |> List.nth 0 in
+  %   let xlast = xs |> List.reverse |> List.nth 0 in
+  %   match (y0, y1, x0, xlast) with
+  %   | (Some(y0), Some(y1), Some(x0), Some(xlast)) ->
+  %       [fill clr (Gr.rectangle (x0, y0) (xlast, y1))]
+  %   | _ -> []
+
+  % }}}
+
+  let-inline ctx \easytable ?:rules-lst-opt algns it-vector =
+    % 列ごとに align するための関数のリスト．
+    % 要素は inline-boxes を受け取り cell を返す関数．
+    let aligner-lst: (inline-boxes -> cell) list = List.map (align ctx) algns in
+
+    % まず inline-text 型の matrix (list の list) を生成する．
+    % その後，inline-text matrix, inline-boxes matrix, cell matrix の順に変換していく．
+    let it-matrix = reshape (List.length algns) {} it-vector in
+    let ib-matrix = List.map (List.map (read-inline ctx)) it-matrix in
+    let cell-matrix = colmap (aligner-lst) ib-matrix in
+
+    % 罫線の設定．
+    let default-rules-lst = [toprule;bottomrule; midrule 1;] in
+    let rules-lst = Option.from default-rules-lst rules-lst-opt in
+    let rulef = concat-ruleptn rules-lst in
+
+    tabular cell-matrix rulef
+
+end

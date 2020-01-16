@@ -1,0 +1,10 @@
+@import: easytable
+
+let l = AlignLeft
+let c = AlignCenter
+let r = AlignRight
+
+let t = EasyTable.toprule
+let b = EasyTable.bottomrule
+let m = EasyTable.midrule
+let v = EasyTable.vertrule

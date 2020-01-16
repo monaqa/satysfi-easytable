@@ -3,6 +3,9 @@
 let l = AlignLeft
 let c = AlignCenter
 let r = AlignRight
+let lw wid = AlignLeftWithWidth(wid)
+let cw wid = AlignCenterWithWidth(wid)
+let rw wid = AlignRightWithWidth(wid)
 
 let t = EasyTable.toprule
 let b = EasyTable.bottomrule

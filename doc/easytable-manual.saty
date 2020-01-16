@@ -36,11 +36,11 @@ document (|
     }
 
     +p{
-      \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;l]{
+      \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;cw 170pt]{
         | header1    | header2      | header3     | header4
-        | align left | align center | align right | align left
-        | align left | align center | align right | align left
-        | align left | align center | align right | align left
+        | align left | align center | align right | align center with width 170pt
+        | align left | align center | align right | align center with width 170pt
+        | align left | align center | align right | align center with width 170pt
         | a          | b            | c           | d
         | a          | b            | c           | d
         | a          | b            | c           | d

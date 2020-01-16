@@ -15,9 +15,9 @@ type alignrule =
   | AlignLeft
   | AlignCenter
   | AlignRight
-  % | AlignLeftWithWidth of length
-  % | AlignCenterWithWidth of length
-  % | AlignRightWithWidth of length
+  | AlignLeftWithWidth of length
+  | AlignCenterWithWidth of length
+  | AlignRightWithWidth of length
 
 module EasyTable: sig
 
@@ -83,6 +83,22 @@ end = struct
     | (ruleptn :: others) -> List.append (ruleptn xs ys) (concat-ruleptn others xs ys)
 
   % 代数的データ型である algnrule に意味を持たせるための関数．
+  let adjust-ib algnrule ib =
+    let (wid-ib, _, _) = get-natural-metrics ib in
+    match algnrule with
+    | AlignLeft   ->               ib ++ inline-fil
+    | AlignCenter -> inline-fil ++ ib ++ inline-fil
+    | AlignRight  -> inline-fil ++ ib
+    | AlignLeftWithWidth(wid) ->
+        let skp = inline-skip (wid -' wid-ib) in
+                             ib ++ skp ++ inline-fil
+    | AlignCenterWithWidth(wid) ->
+        let skp = inline-skip ((wid -' wid-ib) *' 0.5) in
+        inline-fil ++ skp ++ ib ++ skp ++ inline-fil
+    | AlignRightWithWidth(wid) ->
+        let skp = inline-skip (wid -' wid-ib) in
+        inline-fil ++ skp ++ ib
+
   % ctx と algnrule が決まれば，inline-boxes を cell へと変換することができる．
   % align は， ctx が与えられたときに algnrule を
   % (inline-boxes -> cell) という関数へと変換する関数である．
@@ -91,10 +107,10 @@ end = struct
       let fs = ctx |> get-font-size in
       (fs *' 0.5, fs *' 0.5, fs *' 0.4, fs *' 0.4)
     in
-    match algnrule with
-    | AlignLeft   -> NormalCell(pads,               ib ++ inline-fil)
-    | AlignCenter -> NormalCell(pads, inline-fil ++ ib ++ inline-fil)
-    | AlignRight  -> NormalCell(pads, inline-fil ++ ib              )
+    NormalCell(pads, adjust-ib algnrule ib)
+
+
+
 
   % }}}
 

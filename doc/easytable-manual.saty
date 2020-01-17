@@ -28,6 +28,19 @@ document (|
   +section{Easytable パッケージの概要}<
 
     +p{
+      \SATySFi; は \code(`tabular`); という表組版のためのプリミティヴを有しており，
+      非常に柔軟な組版を行うことができます．
+      その代わり，表を一つ作成するためのコードは簡素とはいえませんでした．
+      たとえばこんな表を書きたいとします．
+
+
+    }
+    +p{
+      Easytable パッケージは，
+
+    }
+
+    +p{
       \easytable[l;c;r]{
         | header1 | header2 | header3
         | align left | align center | align right
@@ -47,7 +60,36 @@ document (|
         |}
     }
 
+    +p{
+      \list-table[r;l;l;]{
+        *
+          ** Treat
+          ** Quantity
+          ** Description
 
+        *
+          ** Albatross
+          ** 2.99
+          ** On a stick!
+
+        *
+          ** Crunchy Frog
+          ** 1.49
+          ** If we took the bones out, it wouldn't be crunchy, now would it?
+
+        *
+          ** Gannet Ripple
+          ** 1.99
+          ** On a stick!
+      }
+    }
+
+  % SATySFi における表組版の方針
+  % easytable の立ち位置，スタンス
+  % 基本的な使い方
+    % 同じことを SATySFi の標準パッケージでやるとどうなるか
+  % 必須引数の説明
+  % オプション引数の説明
   >
 
 >

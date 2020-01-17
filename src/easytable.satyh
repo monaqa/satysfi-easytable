@@ -3,6 +3,7 @@
 @require: list
 @require: gr
 @require: option
+@require: color
 
 % 行列（表の中身を格納するデータ構造に使用）
 type 'a matrix = ('a list) list
@@ -34,6 +35,7 @@ module EasyTable: sig
   % val header-col-bg: color -> ruleptn
 
   direct \easytable: [(ruleptn list)?; (alignrule list); (inline-text list)] inline-cmd
+  direct \list-table: [(ruleptn list)?; (alignrule list); itemize] inline-cmd
 
 end = struct
 
@@ -191,6 +193,31 @@ end = struct
     % まず inline-text 型の matrix (list の list) を生成する．
     % その後，inline-text matrix, inline-boxes matrix, cell matrix の順に変換していく．
     let it-matrix = reshape (List.length algns) {} it-vector in
+    let ib-matrix = List.map (List.map (read-inline ctx)) it-matrix in
+    let cell-matrix = colmap (aligner-lst) ib-matrix in
+
+    % 罫線の設定．
+    let default-rules-lst = [toprule;bottomrule; midrule 1;] in
+    let rules-lst = Option.from default-rules-lst rules-lst-opt in
+    let rulef = concat-ruleptn rules-lst in
+
+    tabular cell-matrix rulef
+
+
+  let itemize-to-it-matrix (Item(_, lst-item)) =
+    let itemize-to-it-vector (Item(it, lst-item)) =
+      let extract-it-from-item (Item(it-inner, _)) = it-inner in
+      let inner-items = List.map extract-it-from-item lst-item in
+      inner-items
+    in
+    List.map itemize-to-it-vector lst-item
+
+  let-inline ctx \list-table ?:rules-lst-opt algns item =
+    % 列ごとに align するための関数のリスト．
+    % 要素は inline-boxes を受け取り cell を返す関数．
+    let aligner-lst: (inline-boxes -> cell) list = List.map (align ctx) algns in
+
+    let it-matrix = itemize-to-it-matrix item in
     let ib-matrix = List.map (List.map (read-inline ctx)) it-matrix in
     let cell-matrix = colmap (aligner-lst) ib-matrix in
 

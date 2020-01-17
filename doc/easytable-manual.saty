@@ -10,7 +10,6 @@
 @import: ../src/easytable-dirtyhack
 
 % Preamble {{{
-
 % in
 % }}}
 
@@ -61,7 +60,7 @@ document (|
     }
 
     +p{
-      \list-table[r;l;l;]{
+      \list-table[rw 90pt; lw 60pt;lw 180pt;]{
         *
           ** Treat
           ** Quantity
@@ -84,12 +83,16 @@ document (|
       }
     }
 
+  % いつか書きたいこと
   % SATySFi における表組版の方針
   % easytable の立ち位置，スタンス
+    % 制約: MultiCell, 行ごとに異なる align は現時点ではできない
   % 基本的な使い方
-    % 同じことを SATySFi の標準パッケージでやるとどうなるか
+    % 簡単な表
+    % （同じことを SATySFi の標準パッケージでやるとどう書く必要があるか）
   % 必須引数の説明
   % オプション引数の説明
+    % 少し複雑な表
   >
 
 >

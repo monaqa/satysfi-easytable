@@ -85,19 +85,34 @@ end = struct
     | (ruleptn :: others) -> List.append (ruleptn xs ys) (concat-ruleptn others xs ys)
 
   % 代数的データ型である algnrule に意味を持たせるための関数．
-  let adjust-ib algnrule ib =
+  let adjust-ib ctx algnrule ib =
     let (wid-ib, _, _) = get-natural-metrics ib in
     match algnrule with
     | AlignLeft   ->               ib ++ inline-fil
     | AlignCenter -> inline-fil ++ ib ++ inline-fil
     | AlignRight  -> inline-fil ++ ib
     | AlignLeftWithWidth(wid) ->
-        let skp = inline-skip (wid -' wid-ib) in
-                             ib ++ skp ++ inline-fil
+        if wid-ib >' wid then
+        let ib-block = embed-block-top ctx wid
+          (fun ctx1 -> line-break false false ctx1 (ib ++ inline-fil)) in
+          ib-block
+        else
+          let skp = inline-skip (wid -' wid-ib) in
+          ib ++ skp ++ inline-fil
     | AlignCenterWithWidth(wid) ->
-        let skp = inline-skip ((wid -' wid-ib) *' 0.5) in
-        inline-fil ++ skp ++ ib ++ skp ++ inline-fil
+        if wid-ib >' wid then
+        let ib-block = embed-block-top ctx wid
+          (fun ctx1 -> line-break false false ctx1 (ib ++ inline-fil)) in
+          ib-block
+        else
+          let skp = inline-skip ((wid -' wid-ib) *' 0.5) in
+          inline-fil ++ skp ++ ib ++ skp ++ inline-fil
     | AlignRightWithWidth(wid) ->
+        if wid-ib >' wid then
+        let ib-block = embed-block-top ctx wid
+          (fun ctx1 -> line-break false false ctx1 (ib ++ inline-fil)) in
+          ib-block
+        else
         let skp = inline-skip (wid -' wid-ib) in
         inline-fil ++ skp ++ ib
 
@@ -109,7 +124,7 @@ end = struct
       let fs = ctx |> get-font-size in
       (fs *' 0.5, fs *' 0.5, fs *' 0.4, fs *' 0.4)
     in
-    NormalCell(pads, adjust-ib algnrule ib)
+    NormalCell(pads, adjust-ib ctx algnrule ib)
 
 
 

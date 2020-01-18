@@ -7,10 +7,15 @@
 @require: code
 @require: color
 @require: hdecoset
+@require: math
+@require: enumitem
 @import: ../src/easytable-dirtyhack
 
 % Preamble {{{
-% in
+
+% 単項演算子のマイナスを出す標準の方法がわからんかった
+let-math \minus = math-char MathOp `−` in
+
 % }}}
 
 document (|
@@ -27,16 +32,27 @@ document (|
   +section{Easytable パッケージの概要}<
 
     +p{
-      \SATySFi; は \code(`tabular`); という表組版のためのプリミティヴを有しており，
-      非常に柔軟な組版を行うことができます．
-      その代わり，表を一つ作成するためのコードは簡素とはいえませんでした．
-      たとえばこんな表を書きたいとします．
-
+      Easytable パッケージは， \SATySFi; 上で楽に表を組むためのパッケージです．
+      \SATySFi; には複数の table 関連のパッケージがありますが，
+      easytable は「ある程度単純な，しかし汎用性の高い表を，楽に組めるようにする」という思想で開発しています．
+      Easytable で組むことのできる表には以下の制約があります．
+      \listing{
+        * 左揃え，中央揃えなどの条件は列ごとに設定する．セル単位で変更することはできない．
+        * MultiCell（複数の行または列にわたるセル）は使えない．
+      }%
+      これらの制約を入れてユーザが設定しなければならないパラメータを最小限に抑えることで，
+      組みやすいインターフェースを実現しています．
 
     }
-    +p{
-      Easytable パッケージは，
+  >
 
+  +section{Gallery}<
+    +p{
+      ソースコードは同梱の saty ファイルの対応する箇所をご覧ください．
+      以下は最も単純な表の例です．
+      左揃え，中央揃え，右揃えの設定は列ごとに設定します．
+      罫線は設定で変えられますが，デフォルトでは表の最初と最後に太い線，そして
+      ヘッダ行（デフォルトでは1行目とみなされます）の下に細い線が入るようになっています．
     }
 
     +p{
@@ -48,19 +64,41 @@ document (|
     }
 
     +p{
-      \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;cw 170pt]{
+      以下は少し複雑な例です．
+      オプション引数を用いてどこに罫線を引くか指定することができます．
+      また，列幅は指定することができます．
+      なお，表の中身として指定するのはインラインテキストですから，
+      インラインコマンドを用いて書式を変えることができます．
+      数式を入れることもできます．
+    }
+
+    +p{
+      \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;cw 190pt]{
         | header1    | header2      | header3     | header4
-        | align left | align center | align right | align center with width 170pt
-        | align left | align center | align right | align center with width 170pt
-        | align left | align center | align right | align center with width 170pt
+        | align left | align center | align right | align center with width 190pt
+        | \textbf{align left}
+        | \textit{align center}
+        | \textsf{align right}
+        | \code(`align center with width 190pt`);
+        | align left | align center | align right | align center with width 190pt
         | a          | b            | c           | d
-        | a          | b            | c           | d
+        | a          | b            | c           | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
         | a          | b            | c           | d
         |}
     }
 
     +p{
-      \list-table[rw 90pt; lw 60pt;lw 180pt;]{
+      表にある程度長いテキストを入れたくなることもあるでしょう．
+      列幅を指定すれば，長いインラインテキストを折り返すことができます．
+      ただし，複数行に渡るインラインテキストを中央揃えや右揃えにすることは現状できませんから，
+      長いテキストが入る列では左揃えを選択するようにしてください．
+      なお，長い文章を入れたい場合などは，
+      箇条書き形式で表に要素を入れることのできる
+      \code(`\list-table`); コマンドが便利です．
+    }
+
+    +p{
+      \list-table?:[t; b; m 1; v 1; v 2][rw 90pt; lw 60pt;lw 180pt;]{
         *
           ** Treat
           ** Quantity
@@ -81,6 +119,36 @@ document (|
           ** 1.99
           ** On a stick!
       }
+    }
+
+    +p{
+      以下は単純な例で，なんとなく数学書の最初に載っていそうな表です．
+      これぐらいシンプルな表は，やはりシンプルに書きたいものです．
+    }
+
+    +p{
+      \easytable?:[t; b][c; l]{
+        | ${\bm{N}} | 自然数全体の集合
+        | ${\bm{Z}} | 整数全体の集合
+        | ${\bm{Q}} | 有理数全体の集合
+        | ${\bm{R}} | 実数全体の集合
+        | ${\bm{C}} | 複素数全体の集合
+        |}
+    }
+
+    +p{
+      以下も比較的単純な表です．
+      easytable パッケージでは，表の格子点から格子点をつなぐ線をひくことができます．
+      これを用いることで，表の左上によく見るバックスラッシュを引くことができます．
+    }
+
+    +p{
+      \easytable?:[d (0, 0) (1, 1); v 1; h 1; rect;][c; c; c; c;]{
+        |      | ${e} | ${g} | ${h}
+        | ${e} | ${e} | ${g} | ${h}
+        | ${g} | ${g} | ${h} | ${e}
+        | ${h} | ${h} | ${e} | ${g}
+        |}
     }
 
   % いつか書きたいこと

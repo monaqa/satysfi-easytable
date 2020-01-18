@@ -28,10 +28,14 @@ module EasyTable: sig
   % val concat-ruleptn: ruleptn list -> ruleptn
   % val align: context -> alignrule -> inline-boxes -> cell
 
+  val genrule: (path -> graphics) -> (int * int) -> (int * int) -> ruleptn
   val toprule: ruleptn
   val bottomrule: ruleptn
   val midrule: int -> ruleptn
   val vertrule: int -> ruleptn
+  val horizrule: int -> ruleptn
+  val diagrule: (int * int) -> (int * int) -> ruleptn
+  val outerframerule: ruleptn
   % val header-col-bg: color -> ruleptn
 
   direct \easytable: [(ruleptn list)?; (alignrule list); (inline-text list)] inline-cmd
@@ -123,6 +127,7 @@ end = struct
     let pads =
       let fs = ctx |> get-font-size in
       (fs *' 0.5, fs *' 0.5, fs *' 0.4, fs *' 0.4)
+      % (0.0pt, 0.0pt, 0.0pt, 0.0pt)
     in
     NormalCell(pads, adjust-ib ctx algnrule ib)
 
@@ -133,41 +138,39 @@ end = struct
 
   % 罫線の設定 {{{
 
-  let toprule xs ys =
-    let thick = stroke 1pt Color.black in
-    let y0 = ys |> List.nth 0 in
-    let x0 = xs |> List.nth 0 in
-    let xlast = xs |> List.reverse |> List.nth 0 in
-    match (y0, x0, xlast) with
-    | (Some(y0), Some(x0), Some(xlast)) ->
-        [thick (Gr.line (x0, y0) (xlast, y0))]
+  % convenient-nth 0 lst だったら lst の最初の要素，
+  % convenient-nth 1 lst だったら lst の最初から2番目の要素をとる．
+  % convenient-nth -1 lst だったら lst の最後の要素，
+  % convenient-nth -2 lst だったら lst の最後から2番目の要素をとる，
+  % Python の index のようなイメージ．「ここから最後まで引きたい」ときに便利．
+  let convenient-nth idx lst =
+    if idx >= 0 then
+      lst |> List.nth idx
+    else
+      lst |> List.reverse |> List.nth (-idx - 1)
+
+  let genrule line-style (coli, rowi) (colj, rowj) xs ys =
+    let xi = xs |> convenient-nth coli in
+    let xj = xs |> convenient-nth colj in
+    let yi = ys |> convenient-nth rowi in
+    let yj = ys |> convenient-nth rowj in
+    match (xi, xj, yi, yj) with
+    | (Some(xi), Some(xj), Some(yi), Some(yj)) ->
+        [line-style (Gr.line (xi, yi) (xj, yj))]
     | _ -> []
 
-    % こう書いてもいい
-    % match ys with
-    % | (y0 :: _) ->
-    %     (match (xs, List.reverse xs) with
-    %      | (x0 :: _, xlast:: _) ->
-    %          [thick (Gr.line (x0, y0) (xlast, y0))]
-    %      | _ -> []
-    %     )
-    % | _ -> []
-
-  let bottomrule xs ys =
-    let thick = stroke 1pt Color.black in
-    let ylast = ys |> List.reverse |> List.nth 0 in
-    let x0 = xs |> List.nth 0 in
-    let xlast = xs |> List.reverse |> List.nth 0 in
-    match (ylast, x0, xlast) with
-    | (Some(ylast), Some(x0), Some(xlast)) ->
-        [thick (Gr.line (x0, ylast) (xlast, ylast))]
-    | _ -> []
+  let toprule = genrule (stroke 1pt Color.black) (0, 0) (-1, 0)
+  let bottomrule = genrule (stroke 1pt Color.black) (0, -1) (-1, -1)
+  let vertrule idx-col = genrule (stroke 0.5pt Color.black) (idx-col, 0) (idx-col, -1)
+  let horizrule idx-row = genrule (stroke 0.5pt Color.black) (0, idx-row) (-1, idx-row)
+  let diagrule = genrule (stroke 0.5pt Color.black)
 
   let midrule idx-row xs ys =
+    % booktabs っぽくちょっと短いラインにしてみる
     let thin = stroke 0.5pt Color.black in
-    let yi = ys |> List.nth idx-row in
-    let x0 = xs |> List.nth 0 in
-    let xlast = xs |> List.reverse |> List.nth 0 in
+    let yi = ys |> convenient-nth idx-row in
+    let x0 = xs |> convenient-nth 0 in
+    let xlast = xs |> convenient-nth (-1) in
     match (yi, x0, xlast) with
     | (Some(yi), Some(x0), Some(xlast)) ->
         let x0-adj = x0 +' 2pt in
@@ -175,14 +178,16 @@ end = struct
         [thin (Gr.line (x0-adj, yi) (xlast-adj, yi))]
     | _ -> []
 
-  let vertrule idx-col xs ys =
-    let thin = stroke 0.5pt Color.black in
-    let xi = xs |> List.nth idx-col in
-    let y0 = ys |> List.nth 0 in
-    let ylast = ys |> List.reverse |> List.nth 0 in
-    match (xi, y0, ylast) with
-    | (Some(xi), Some(y0), Some(ylast)) ->
-        [thin (Gr.line (xi, y0) (xi, ylast))]
+  let outerframerule xs ys =
+    % booktabs っぽくちょっと短いラインにしてみる
+    let thick = stroke 1pt Color.black in
+    let x0 = xs |> convenient-nth 0 in
+    let xlast = xs |> convenient-nth (-1) in
+    let y0 = ys |> convenient-nth 0 in
+    let ylast = ys |> convenient-nth (-1) in
+    match (x0, xlast, y0, ylast) with
+    | (Some(x0), Some(xlast), Some(y0), Some(ylast)) ->
+        [thick (Gr.rectangle (x0, y0) (xlast, ylast))]
     | _ -> []
 
   % header の背景塗りつぶし．

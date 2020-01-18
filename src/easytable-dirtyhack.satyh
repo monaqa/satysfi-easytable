@@ -11,3 +11,7 @@ let t = EasyTable.toprule
 let b = EasyTable.bottomrule
 let m = EasyTable.midrule
 let v = EasyTable.vertrule
+let h = EasyTable.horizrule
+let d = EasyTable.diagrule
+
+let rect = EasyTable.outerframerule

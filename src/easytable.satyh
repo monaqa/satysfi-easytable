@@ -4,9 +4,7 @@
 @require: gr
 @require: option
 @require: color
-
-% 行列（表の中身を格納するデータ構造に使用）
-type 'a matrix = ('a list) list
+@import: matrix
 
 % 罫線のパターン．
 type ruleptn = length list -> length list -> graphics list
@@ -23,8 +21,6 @@ type alignrule =
 module EasyTable: sig
 
   % 補助的な関数
-  % val reshape: int -> 'a -> 'a list -> 'a matrix
-  % val colmap: ('a -> 'b) list -> 'a matrix -> 'b matrix
   % val concat-ruleptn: ruleptn list -> ruleptn
   % val align: context -> alignrule -> inline-boxes -> cell
 
@@ -45,42 +41,42 @@ end = struct
 
   % 補助的な関数 {{{
 
-  let range n1 n2 =
-    let-rec aux min max =
-      if min == max then [min] else min :: (aux (min + 1) max)
-    in
-    if n1 < n2 then (aux n1 n2) else (aux n2 n1)
-
-  let reshape ncol dft-value lst =
-    let nrow = (List.length lst) / ncol in
-    let row-range = range 0 (nrow - 1) in
-    let col-range = range 0 (ncol - 1) in
-    let l-col-each-row row-idx =
-      List.map(
-        fun idx -> Option.from dft-value (List.nth (idx + ncol * row-idx) lst)
-      ) col-range
-    in
-    List.map l-col-each-row row-range
-
-  % 関数のリスト {f_i} 及び，それと要素数が等しいリスト {a_i} が与えられたとき，
-  % {f_i a_i} を返す関数．
-  let-rec map-each f-lst lst =
-    match f-lst with
-    | [] -> []
-    | f1::fs -> (match lst with
-                 | [] -> []
-                 | x1::xs ->  (f1 x1) :: (map-each fs xs))
-    % match (f-lst, lst) with
-    % | ([], []) -> []
-    % | ([], _)  -> []
-    % | (_, [])  -> []
-    % | ([f1 :: fs], [x1 :: xs]) -> (f1 x1) :: (map-each fs xs)
-
-  % M * N 行列 input 及び N 個の関数 f_n が与えられたとする．
-  % input の n 行目の縦ベクトルを input_n としたとき，
-  % [(f_1 input_1) (f_2 input_2) ... (f_N input_N)]
-  % の形をした行列（上の式は横方向に連なっていることを表している）を返す．
-  let colmap f-col input = List.map (map-each f-col) input
+  % let range n1 n2 =
+  %   let-rec aux min max =
+  %     if min == max then [min] else min :: (aux (min + 1) max)
+  %   in
+  %   if n1 < n2 then (aux n1 n2) else (aux n2 n1)
+  %
+  % let reshape ncol dft-value lst =
+  %   let nrow = (List.length lst) / ncol in
+  %   let row-range = range 0 (nrow - 1) in
+  %   let col-range = range 0 (ncol - 1) in
+  %   let l-col-each-row row-idx =
+  %     List.map(
+  %       fun idx -> Option.from dft-value (List.nth (idx + ncol * row-idx) lst)
+  %     ) col-range
+  %   in
+  %   List.map l-col-each-row row-range
+  %
+  % % 関数のリスト {f_i} 及び，それと要素数が等しいリスト {a_i} が与えられたとき，
+  % % {f_i a_i} を返す関数．
+  % let-rec map-each f-lst lst =
+  %   match f-lst with
+  %   | [] -> []
+  %   | f1::fs -> (match lst with
+  %                | [] -> []
+  %                | x1::xs ->  (f1 x1) :: (map-each fs xs))
+  %   % match (f-lst, lst) with
+  %   % | ([], []) -> []
+  %   % | ([], _)  -> []
+  %   % | (_, [])  -> []
+  %   % | ([f1 :: fs], [x1 :: xs]) -> (f1 x1) :: (map-each fs xs)
+  %
+  % % M * N 行列 input 及び N 個の関数 f_n が与えられたとする．
+  % % input の n 行目の縦ベクトルを input_n としたとき，
+  % % [(f_1 input_1) (f_2 input_2) ... (f_N input_N)]
+  % % の形をした行列（上の式は横方向に連なっていることを表している）を返す．
+  % let colmap f-col input = List.map (map-each f-col) input
 
   % 複数の罫線パターンを結合する．
   let-rec concat-ruleptn ruleptn-lst xs ys =
@@ -212,16 +208,16 @@ end = struct
 
     % まず inline-text 型の matrix (list の list) を生成する．
     % その後，inline-text matrix, inline-boxes matrix, cell matrix の順に変換していく．
-    let it-matrix = reshape (List.length algns) {} it-vector in
-    let ib-matrix = List.map (List.map (read-inline ctx)) it-matrix in
-    let cell-matrix = colmap (aligner-lst) ib-matrix in
+    let it-matrix = Matrix.from-list (List.length algns) {} it-vector in
+    let ib-matrix = Matrix.map (read-inline ctx) it-matrix in
+    let cell-matrix = Matrix.colmap (aligner-lst) ib-matrix in
 
     % 罫線の設定．
     let default-rules-lst = [toprule;bottomrule; midrule 1;] in
     let rules-lst = Option.from default-rules-lst rules-lst-opt in
     let rulef = concat-ruleptn rules-lst in
 
-    tabular cell-matrix rulef
+    tabular (Matrix.to-llist cell-matrix) rulef
 
 
   let itemize-to-it-matrix (Item(_, lst-item)) =
@@ -230,7 +226,7 @@ end = struct
       let inner-items = List.map extract-it-from-item lst-item in
       inner-items
     in
-    List.map itemize-to-it-vector lst-item
+    Matrix.from-llist(List.map itemize-to-it-vector lst-item)
 
   let-inline ctx \list-table ?:rules-lst-opt algns item =
     % 列ごとに align するための関数のリスト．
@@ -238,14 +234,14 @@ end = struct
     let aligner-lst: (inline-boxes -> cell) list = List.map (align ctx) algns in
 
     let it-matrix = itemize-to-it-matrix item in
-    let ib-matrix = List.map (List.map (read-inline ctx)) it-matrix in
-    let cell-matrix = colmap (aligner-lst) ib-matrix in
+    let ib-matrix = Matrix.map (read-inline ctx) it-matrix in
+    let cell-matrix = Matrix.colmap (aligner-lst) ib-matrix in
 
     % 罫線の設定．
     let default-rules-lst = [toprule;bottomrule; midrule 1;] in
     let rules-lst = Option.from default-rules-lst rules-lst-opt in
     let rulef = concat-ruleptn rules-lst in
 
-    tabular cell-matrix rulef
+    tabular (Matrix.to-llist cell-matrix) rulef
 
 end

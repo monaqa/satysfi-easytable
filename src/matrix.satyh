@@ -1,0 +1,125 @@
+
+@require: list
+%% matrix (2-dimensional array)
+
+module Matrix : sig
+
+  type 'a t
+
+  val from-list: int -> 'a -> 'a list -> 'a t
+  val to-list: 'a t -> 'a list
+  val from-llist: ('a list) list -> 'a t
+  val to-llist: 'a t -> ('a list) list
+  val reshape: int -> 'a -> 'a t -> 'a t
+  val shape: 'a t -> (int * int)
+
+  val get : int -> int -> 'a t -> 'a option
+
+  % val copy-row: 'a list -> int -> 'a t
+  % val copy-col: 'a list -> int -> 'a t
+  val map: ('a -> 'b) -> 'a t -> 'b t
+
+  % map の f が adjacent になった版．ただし，隣接は行方向．
+  val map-rowidx-adjacent: (int -> 'a -> 'a option -> 'a option -> 'b) -> 'a t -> 'b t
+
+  % M * N 行列 input 及び M 個の関数 f_m が与えられたとする．
+  % input の m 行目の横ベクトルを input_m としたとき，
+  % [(f_1 input_1);
+  %  (f_2 input_2);
+  %   ...
+  %  (f_M input_M)]
+  % の形をした行列（上の式は縦方向に連なっていることを表している）を返す．
+  val rowmap: ('a -> 'b) list -> 'a t -> 'b t
+
+  % M * N 行列 input 及び N 個の関数 f_n が与えられたとする．
+  % input の n 行目の縦ベクトルを input_n としたとき，
+  % [(f_1 input_1) (f_2 input_2) ... (f_N input_N)]
+  % の形をした行列（上の式は横方向に連なっていることを表している）を返す．
+  val colmap: ('a -> 'b) list -> 'a t -> 'b t
+
+
+  val eachmap: ('a -> 'b) t -> 'a t -> 'b t
+
+  % 行列の結合．
+  val vconcat: 'a t -> 'a t -> 'a t
+  val hconcat: 'a t -> 'a t -> 'a t
+
+  % val transpose: 'a t -> 'a t
+
+end = struct
+
+  type 'a t = ('a list) list
+
+  let range n1 n2 =
+    let-rec aux min max =
+      if min == max then [min] else min :: (aux (min + 1) max)
+    in
+    if n1 < n2 then (aux n1 n2) else (aux n2 n1)
+
+  let from-list ncol dft-value lst =
+    let nrow = (List.length lst) / ncol in
+    let row-range = range 0 (nrow - 1) in
+    let col-range = range 0 (ncol - 1) in
+    let l-col-each-row row-idx =
+      List.map(
+        fun idx -> Option.from dft-value (List.nth (idx + ncol * row-idx) lst)
+      ) col-range
+    in
+    List.map l-col-each-row row-range
+
+  let to-list = List.concat
+
+  let from-llist llst = llst
+  let to-llist mtx = mtx
+
+  let reshape ncol dft-value mtx =
+    let lst = to-list mtx in
+    from-list ncol dft-value lst
+
+  let shape mtx =
+    match mtx |> List.nth 0 with
+    | Some(row0) -> (List.length mtx, List.length row0)
+    | None -> (0, 0)
+
+  % convenient-nth 0 lst だったら lst の最初の要素，
+  % convenient-nth 1 lst だったら lst の最初から2番目の要素をとる．
+  % convenient-nth -1 lst だったら lst の最後の要素，
+  % convenient-nth -2 lst だったら lst の最後から2番目の要素をとる，
+  % Python の index のようなイメージ．「ここから最後まで引きたい」ときに便利．
+  let convenient-nth idx lst =
+    if idx >= 0 then
+      lst |> List.nth idx
+    else
+      lst |> List.reverse |> List.nth (-idx - 1)
+
+  let get i j mtx =
+    let row-i = mtx |> List.nth i in
+    match row-i with
+    | Some(row-i) -> (row-i |> List.nth j)
+    | None -> None
+
+  let map f mtx = List.map (List.map f) mtx
+
+  let map-rowidx-adjacent f mtx = List.map (List.mapi-adjacent f) mtx
+
+  % 関数のリスト {f_i} 及び，それと要素数が等しいリスト {a_i} が与えられたとき，
+  % {f_i a_i} を返す関数．
+  let-rec map-each-list f-lst lst =
+    match f-lst with
+    | [] -> []
+    | f1::fs -> (match lst with
+                 | [] -> []
+                 | x1::xs ->  (f1 x1) :: (map-each-list fs xs))
+
+  let rowmap f-lst mtx = map-each-list (List.map List.map f-lst) mtx
+
+  let colmap f-lst mtx = List.map (map-each-list f-lst) mtx
+
+  let eachmap f-mtx mtx = map-each-list (List.map map-each-list f-mtx) mtx
+
+  let vconcat mtx1 mtx2 = List.concat [mtx1; mtx2]
+
+  let hconcat mtx1 mtx2 = map-each-list (List.map (fun x y -> List.concat [x; y]) mtx1) mtx2
+
+
+end

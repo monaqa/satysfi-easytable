@@ -7,9 +7,10 @@
 @require: code
 @require: color
 @require: hdecoset
-@require: math
+% @require: math
 @require: enumitem
 @import: ../src/easytable-dirtyhack
+@import: ../src/easyeqn
 
 % Preamble {{{
 
@@ -150,6 +151,23 @@ document (|
         | ${h} | ${h} | ${e} | ${g}
         |}
     }
+
+    +p{以下は easyeqn の中のコマンドの例です．そしてこの文章は本文の右端の位置を見せるためのダミーです．}
+
+    +align?:[{(1)}; {(very long long label)}](${
+    | \frac{d}{dx}f\(x\) |= p
+    |        |= \int_{0}^{\pi} p\(x\)
+    |});
+
+    +alignat(2)(${
+    | f\(x\) |= p       | g\(x\) |= q
+    |        |= p\(x\)  |        |= p\(x\)
+    |});
+
+    +align(${
+    | A |= \pmatrix!(2){| 1 | 2 | 3 | 4 |}^2
+    |   |= \pmatrix!(2){| 7 | 10 | 15 | 22 |}
+    |});
 
   % いつか書きたいこと
   % SATySFi における表組版の方針

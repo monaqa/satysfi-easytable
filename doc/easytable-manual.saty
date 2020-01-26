@@ -154,20 +154,36 @@ document (|
 
     +p{以下は easyeqn の中のコマンドの例です．そしてこの文章は本文の右端の位置を見せるためのダミーです．}
 
-    +align?:[{(1)}; {(very long long label)}](${
-    | \frac{d}{dx}f\(x\) |= p
-    |        |= \int_{0}^{\pi} p\(x\)
-    |});
+    +align?:({|(1)|(very long long label)|})(${
+      | \frac{d}{dx}f\(x\) |= p
+      |        |= \int_{0}^{\pi} p\(x\)
+      |});
 
     +alignat(2)(${
-    | f\(x\) |= p       | g\(x\) |= q
-    |        |= p\(x\)  |        |= p\(x\)
-    |});
+      | f\(x\) |= p       | g\(x\) |= q
+      |        |= p\(x\)  |        |= p\(x\)
+      |});
 
     +align(${
-    | A |= \pmatrix!(2){| 1 | 2 | 3 | 4 |}^2
-    |   |= \pmatrix!(2){| 7 | 10 | 15 | 22 |}
-    |});
+      | A |= \pmatrix!(2){| 1 | 2 | 3 | 4 |}^2
+      |   |= \pmatrix!(2){| 7 | 10 | 15 | 22 |}
+      |});
+
+
+    +align?:({|||(1.1)|})(${
+
+      | \vmatrix!(3){|a|b|c|d|e|f|g|h|i|}
+        | = a \vmatrix!(2){|e|f|h|i|}
+          - d \vmatrix!(2){|b|c|h|i|}
+          + g \vmatrix!(2){|b|c|e|f|}
+
+      | | = a \paren{ei - fh}
+          - d \paren{bi - ch}
+          + g \paren{bf - ce}
+
+      | | = aei + bfg + cdh - ceg - bdi - afh
+
+      |});
 
   % いつか書きたいこと
   % SATySFi における表組版の方針

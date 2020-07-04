@@ -62,16 +62,19 @@ document (|
   }
 >%
 
-% +section{Easytable パッケージが提供する機能}<%
-%   
-%   +p{
-%     本パッケージが提供するコマンドは2つです．
-%   }
-% 
-%   +listing{
-%     * `\easytable`
-%   }
-% >%
++section{Easytable パッケージが提供する機能}<%
+
+  +p{
+    本パッケージが提供するコマンドは2つです．
+  }
+
+  +listing{
+    * `\easytable: [(ruleptn list)?; (cellfmt list); (inline-text list)] inline-cmd`:
+      2つの引数 （`cellfmt list` 型，`inline-text list` 型）及び
+      1つのオプション引数（`ruleptn list` 型）をとります．
+    * `\list-table: [(ruleptn list)?; (cellfmt list); itemize] inline-cmd`
+  }
+>%
 
 +section{Gallery}<%
   +p{
@@ -100,14 +103,14 @@ document (|
   }
 
   +p{
-    \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;lw 190pt]{
+    \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;lw 200pt]{
       | header1    | header2      | header3     | header4
-      | align left | align center | align right | align center with width 190pt
+      | align left | align center | align right | align center with width 200pt
       | \emph{align left}
       | align center
       | align right
-      | \code(`align center with width 190pt`);
-      | align left | align center | align right | align center with width 190pt
+      | \code(`align center with width 200pt`);
+      | align left | align center | align right | align center with width 200pt
       | a          | b            | c           | d
       | a          | b            | c           | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
       | a          | b            | c           | d
@@ -170,7 +173,13 @@ document (|
   }
 
   +p{
-    \easytable?:[d (0, 0) (1, 1); v 1; h 1; rect;][c; c; c; c;]{
+    \easytable?:[
+    bg-r (Color.gray 0.9) 0 1;
+    bg-c (Color.gray 0.9) 0 1;
+    d (0, 0) (1, 1);
+    v 1; h 1;
+    rect;
+    ][c; c; c; c;]{
       |      | ${e} | ${g} | ${h}
       | ${e} | ${e} | ${g} | ${h}
       | ${g} | ${g} | ${h} | ${e}

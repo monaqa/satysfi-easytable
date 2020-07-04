@@ -34,6 +34,10 @@ module EasyTable: sig
   val diagrule: (int * int) -> (int * int) -> ruleptn
   val outerframerule: ruleptn
   % val header-col-bg: color -> ruleptn
+  val genbgcolor: color -> (int * int) -> (int * int) -> ruleptn
+  val whole-bgcolor: color -> ruleptn
+  val column-bgcolor: color -> int -> int -> ruleptn
+  val row-bgcolor: color -> int -> int -> ruleptn
 
 % commands
   direct \easytable: [(ruleptn list)?; (cellfmt list); (inline-text list)] inline-cmd
@@ -104,14 +108,24 @@ end = struct
     in
     NormalCell(default-pads ctx, ib)
 
-
-
   let margin l r cfmt ctx it =
     match cfmt ctx it with
       | NormalCell((pl, pr, pt, pb), ib) ->
           NormalCell((pl +' l, pr +' r, pt, pb), ib)
       | MultiCell(i, j, (pl, pr, pt, pb), ib) ->
           MultiCell(i, j, (pl +' l, pr +' r, pt, pb), ib)
+      | EmptyCell -> EmptyCell
+
+  let phantom cfmt ctx it =
+    let phantomf ib =
+      let (w, h, d) = get-natural-metrics ib in
+      inline-graphics w h d (fun (x, y) -> [])
+    in
+    match cfmt ctx it with
+      | NormalCell(pads, ib) ->
+          NormalCell(pads, phantomf ib)
+      | MultiCell(i, j, pads, ib) ->
+          MultiCell(i, j, pads, phantomf ib)
       | EmptyCell -> EmptyCell
 
 % rule pattern
@@ -174,6 +188,25 @@ end = struct
         [thick (Gr.rectangle (x0, y0) (xlast, ylast))]
     | _ -> []
 
+  % let whole-bgcolor clr = genrule (fill clr) (0, 0) (-1, 0)
+  let genbgcolor clr (x1, y1) (x2, y2) xs ys =
+    % booktabs っぽくちょっと短いラインにしてみる
+    let thick = stroke 1pt Color.black in
+    let x0 = xs |> convenient-nth x1 in
+    let xlast = xs |> convenient-nth x2 in
+    let y0 = ys |> convenient-nth y1 in
+    let ylast = ys |> convenient-nth y2 in
+    match (x0, xlast, y0, ylast) with
+    | (Some(x0), Some(xlast), Some(y0), Some(ylast)) ->
+        [fill clr (Gr.rectangle (x0, y0) (xlast, ylast))]
+    | _ -> []
+
+  let whole-bgcolor clr = genbgcolor clr (0, 0) (-1, -1)
+
+  let column-bgcolor clr j1 j2 = genbgcolor clr (0, j1) (-1, j2)
+
+  let row-bgcolor clr i1 i2 = genbgcolor clr (i1, 0) (i2, -1)
+
   % header の背景塗りつぶし．
   % うまくいくかと思ったが，どうやら罫線の graphics は
   % 中身を並べた後に描画されているらしく，文字の上に長方形が重なってしまうためボツ．
@@ -191,15 +224,23 @@ end = struct
 
   let-inline ctx \easytable ?:rules-lst-opt cfmtlst it-vector =
     let cell-converter-lst = cfmtlst |> List.map (fun f -> f ctx) in
+    let phantom-cell-converter-lst = cfmtlst |> List.map phantom |> List.map (fun f -> f ctx) in
     let it-matrix = Matrix.from-list (List.length cfmtlst) {} it-vector in
     let cell-matrix = Matrix.colmap (cell-converter-lst) it-matrix in
+    let phantom-cell-matrix = Matrix.colmap (phantom-cell-converter-lst) it-matrix in
 
     % 罫線の設定．
     let default-rules-lst = [toprule;bottomrule; midrule 1;] in
     let rules-lst = Option.from default-rules-lst rules-lst-opt in
     let rulef = concat-ruleptn rules-lst in
 
-    tabular (Matrix.to-llist cell-matrix) rulef
+    let ib-rule = tabular (Matrix.to-llist phantom-cell-matrix) rulef in
+    let ib-table = tabular (Matrix.to-llist cell-matrix) (fun _ _ -> []) in
+    let (w, h, d) = get-natural-metrics ib-table in
+    inline-graphics w h d (fun (x, y) -> [
+      draw-text (x, y) ib-rule;
+      draw-text (x, y) ib-table;
+    ])
 
 
   let itemize-to-it-matrix (Item(_, lst-item)) =
@@ -212,15 +253,23 @@ end = struct
 
   let-inline ctx \list-table ?:rules-lst-opt cfmtlst item =
     let cell-converter-lst = cfmtlst |> List.map (fun f -> f ctx) in
+    let phantom-cell-converter-lst = cfmtlst |> List.map phantom |> List.map (fun f -> f ctx) in
     let it-matrix = itemize-to-it-matrix item in
     let cell-matrix = Matrix.colmap (cell-converter-lst) it-matrix in
+    let phantom-cell-matrix = Matrix.colmap (phantom-cell-converter-lst) it-matrix in
 
     % 罫線の設定．
     let default-rules-lst = [toprule;bottomrule; midrule 1;] in
     let rules-lst = Option.from default-rules-lst rules-lst-opt in
     let rulef = concat-ruleptn rules-lst in
 
-    tabular (Matrix.to-llist cell-matrix) rulef
+    let ib-rule = tabular (Matrix.to-llist phantom-cell-matrix) rulef in
+    let ib-table = tabular (Matrix.to-llist cell-matrix) (fun _ _ -> []) in
+    let (w, h, d) = get-natural-metrics ib-table in
+    inline-graphics w h d (fun (x, y) -> [
+      draw-text (x, y) ib-rule;
+      draw-text (x, y) ib-table;
+    ])
 
 end
 
@@ -243,6 +292,10 @@ module EasyTableAlias : sig
   val h : int -> ruleptn
   val d : (int * int) -> (int * int) -> ruleptn
 
+  val bg-a : color -> ruleptn
+  val bg-r : color -> int -> int -> ruleptn
+  val bg-c : color -> int -> int -> ruleptn
+
   val rect : ruleptn
 
 end = struct
@@ -264,5 +317,9 @@ end = struct
   let d = EasyTable.diagrule
 
   let rect = EasyTable.outerframerule
+
+  let bg-a = EasyTable.whole-bgcolor
+  let bg-r = EasyTable.row-bgcolor
+  let bg-c = EasyTable.column-bgcolor
 
 end

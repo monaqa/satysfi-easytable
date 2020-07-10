@@ -202,10 +202,8 @@ end = struct
     | _ -> []
 
   let whole-bgcolor clr = genbgcolor clr (0, 0) (-1, -1)
-
-  let column-bgcolor clr j1 j2 = genbgcolor clr (0, j1) (-1, j2)
-
-  let row-bgcolor clr i1 i2 = genbgcolor clr (i1, 0) (i2, -1)
+  let column-bgcolor clr i1 i2 = genbgcolor clr (i1, 0) (i2, -1)
+  let row-bgcolor clr j1 j2 = genbgcolor clr (0, j1) (-1, j2)
 
   % header の背景塗りつぶし．
   % うまくいくかと思ったが，どうやら罫線の graphics は

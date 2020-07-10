@@ -68,7 +68,7 @@ end = struct
         (fun ctx1 -> line-break false false ctx1 (ib ++ inline-fil)) in
         NormalCell(default-pads ctx, ib-block)
     else
-      let skp = inline-skip ((wid -' wid-ib) *' 0.5) in
+      let skp = inline-skip (wid -' wid-ib) in
       NormalCell(default-pads ctx, ib ++ skp ++ inline-fil)
 
   let align-center-with-width wid ctx it =
@@ -90,7 +90,7 @@ end = struct
         (fun ctx1 -> line-break false false ctx1 (ib ++ inline-fil)) in
         NormalCell(default-pads ctx, ib-block)
     else
-      let skp = inline-skip ((wid -' wid-ib) *' 0.5) in
+      let skp = inline-skip (wid -' wid-ib) in
       NormalCell(default-pads ctx, inline-fil ++ skp ++ ib)
 
   let equal-spacing ctx it =

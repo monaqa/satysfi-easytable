@@ -25,7 +25,7 @@ module EasyTable: sig
   val margin : length -> length -> cellfmt -> cellfmt
 
 % rule pattern
-  val genrule: (path -> graphics) -> (int * int) -> (int * int) -> ruleptn
+  val genrule: ((length * length) -> (length * length) -> graphics list) -> (int * int) -> (int * int) -> ruleptn
   val toprule: ruleptn
   val bottomrule: ruleptn
   val midrule: int -> ruleptn
@@ -113,9 +113,9 @@ end = struct
   let margin l r cfmt ctx it =
     match cfmt ctx it with
       | NormalCell((pl, pr, pt, pb), ib) ->
-          NormalCell((pl +' l, pr +' r, pt, pb), ib)
+          NormalCell((l, r, pt, pb), ib)
       | MultiCell(i, j, (pl, pr, pt, pb), ib) ->
-          MultiCell(i, j, (pl +' l, pr +' r, pt, pb), ib)
+          MultiCell(i, j, (l, r, pt, pb), ib)
       | EmptyCell -> EmptyCell
 
   let phantom cfmt ctx it =
@@ -149,76 +149,51 @@ end = struct
     else
       lst |> List.reverse |> List.nth (-idx - 1)
 
-  let genrule line-style (rowi, coli) (rowj, colj) xs ys =
+  % 点 i の行・列と点 j の行・列を与える
+  let genrule grf (rowi, coli) (rowj, colj) xs ys =
     let xi = xs |> convenient-nth coli in
     let xj = xs |> convenient-nth colj in
     let yi = ys |> convenient-nth rowi in
     let yj = ys |> convenient-nth rowj in
     match (xi, xj, yi, yj) with
     | (Some(xi), Some(xj), Some(yi), Some(yj)) ->
-        [line-style (Gr.line (xi, yi) (xj, yj))]
+        grf (xi, yi) (xj, yj)
     | _ -> []
 
-  let toprule = genrule (stroke 1pt Color.black) (0, 0) (0, -1)
-  let bottomrule = genrule (stroke 1pt Color.black) (-1, 0) (-1, -1)
-  let vertrule idx-col = genrule (stroke 0.5pt Color.black) (0, idx-col) (-1, idx-col)
-  let horizrule idx-row = genrule (stroke 0.5pt Color.black) (idx-row, 0) (idx-row, -1)
-  let diagrule = genrule (stroke 0.5pt Color.black)
+  let simple-rule linewid clr (xi, yi) (xj, yj) =
+    [stroke linewid clr (Gr.line (xi, yi) (xj, yj))]
 
-  let midrule idx-row xs ys =
+  let toprule = genrule (simple-rule 1pt Color.black) (0, 0) (0, -1)
+  let bottomrule = genrule (simple-rule 1pt Color.black) (-1, 0) (-1, -1)
+  let vertrule idx-col = genrule (simple-rule 0.5pt Color.black) (0, idx-col) (-1, idx-col)
+  let horizrule idx-row = genrule (simple-rule 0.5pt Color.black) (idx-row, 0) (idx-row, -1)
+  let diagrule = genrule (simple-rule 0.5pt Color.black)
+
+  let midrule idx-row =
+    % ちょっと短いラインにしてみる
+    let short-rule (xi, yi) (xj, yj) =
+      [stroke 0.5pt Color.black (Gr.line (xi +' 2pt, yi) (xj -' 2pt, yj))]
+    in
+    genrule short-rule (idx-row, 0) (idx-row, -1)
+
+  let outerframerule =
     % booktabs っぽくちょっと短いラインにしてみる
-    let thin = stroke 0.5pt Color.black in
-    let yi = ys |> convenient-nth idx-row in
-    let x0 = xs |> convenient-nth 0 in
-    let xlast = xs |> convenient-nth (-1) in
-    match (yi, x0, xlast) with
-    | (Some(yi), Some(x0), Some(xlast)) ->
-        let x0-adj = x0 +' 2pt in
-        let xlast-adj = xlast -' 2pt in
-        [thin (Gr.line (x0-adj, yi) (xlast-adj, yi))]
-    | _ -> []
-
-  let outerframerule xs ys =
-    % booktabs っぽくちょっと短いラインにしてみる
-    let thick = stroke 1pt Color.black in
-    let x0 = xs |> convenient-nth 0 in
-    let xlast = xs |> convenient-nth (-1) in
-    let y0 = ys |> convenient-nth 0 in
-    let ylast = ys |> convenient-nth (-1) in
-    match (x0, xlast, y0, ylast) with
-    | (Some(x0), Some(xlast), Some(y0), Some(ylast)) ->
-        [thick (Gr.rectangle (x0, y0) (xlast, ylast))]
-    | _ -> []
+    let thick-frame (xi, yi) (xj, yj) =
+      [stroke 1pt Color.black (Gr.rectangle (xi, yi) (xj, yj))]
+    in
+    genrule thick-frame (0, 0) (-1, -1)
 
   % let whole-bgcolor clr = genrule (fill clr) (0, 0) (-1, 0)
-  let genbgcolor clr (x1, y1) (x2, y2) xs ys =
+  let genbgcolor clr (x1, y1) (x2, y2) =
     % booktabs っぽくちょっと短いラインにしてみる
-    let thick = stroke 1pt Color.black in
-    let x0 = xs |> convenient-nth x1 in
-    let xlast = xs |> convenient-nth x2 in
-    let y0 = ys |> convenient-nth y1 in
-    let ylast = ys |> convenient-nth y2 in
-    match (x0, xlast, y0, ylast) with
-    | (Some(x0), Some(xlast), Some(y0), Some(ylast)) ->
-        [fill clr (Gr.rectangle (x0, y0) (xlast, ylast))]
-    | _ -> []
+    let bg-fill (xi, yi) (xj, yj) =
+      [fill clr (Gr.rectangle (xi, yi) (xj, yj))]
+    in
+    genrule bg-fill (x1, y1) (x2, y2)
 
   let whole-bgcolor clr = genbgcolor clr (0, 0) (-1, -1)
-  let column-bgcolor clr i1 i2 = genbgcolor clr (i1, 0) (i2, -1)
-  let row-bgcolor clr j1 j2 = genbgcolor clr (0, j1) (-1, j2)
-
-  % header の背景塗りつぶし．
-  % うまくいくかと思ったが，どうやら罫線の graphics は
-  % 中身を並べた後に描画されているらしく，文字の上に長方形が重なってしまうためボツ．
-  % let header-col-bg clr xs ys =
-  %   let y0 = ys |> List.nth 0 in
-  %   let y1 = ys |> List.nth 1 in
-  %   let x0 = xs |> List.nth 0 in
-  %   let xlast = xs |> List.reverse |> List.nth 0 in
-  %   match (y0, y1, x0, xlast) with
-  %   | (Some(y0), Some(y1), Some(x0), Some(xlast)) ->
-  %       [fill clr (Gr.rectangle (x0, y0) (xlast, y1))]
-  %   | _ -> []
+  let column-bgcolor clr j1 j2 = genbgcolor clr (0, j1) (-1, j2)
+  let row-bgcolor clr i1 i2 = genbgcolor clr (i1, 0) (i2, -1)
 
 % commands
 
@@ -287,6 +262,8 @@ module EasyTableAlias : sig
   val rw : length -> cellfmt
   val ew : length -> cellfmt
 
+  val mgn : length -> length -> cellfmt -> cellfmt
+
   val t : ruleptn
   val b : ruleptn
   val m : int -> ruleptn
@@ -310,6 +287,8 @@ end = struct
   let cw = EasyTable.align-center-with-width
   let rw = EasyTable.align-right-with-width
   let ew = EasyTable.equal-spacing-with-width
+
+  let mgn = EasyTable.margin
 
   let t = EasyTable.toprule
   let b = EasyTable.bottomrule

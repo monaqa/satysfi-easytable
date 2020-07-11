@@ -43,6 +43,8 @@ module EasyTable: sig
   direct \easytable: [(ruleptn list)?; (cellfmt list); (inline-text list)] inline-cmd
   direct \list-table: [(ruleptn list)?; (cellfmt list); itemize] inline-cmd
 
+  direct \multicell : [int; int; inline-text] inline-cmd
+
 end = struct
 
 % cell format
@@ -147,7 +149,7 @@ end = struct
     else
       lst |> List.reverse |> List.nth (-idx - 1)
 
-  let genrule line-style (coli, rowi) (colj, rowj) xs ys =
+  let genrule line-style (rowi, coli) (rowj, colj) xs ys =
     let xi = xs |> convenient-nth coli in
     let xj = xs |> convenient-nth colj in
     let yi = ys |> convenient-nth rowi in
@@ -157,10 +159,10 @@ end = struct
         [line-style (Gr.line (xi, yi) (xj, yj))]
     | _ -> []
 
-  let toprule = genrule (stroke 1pt Color.black) (0, 0) (-1, 0)
-  let bottomrule = genrule (stroke 1pt Color.black) (0, -1) (-1, -1)
-  let vertrule idx-col = genrule (stroke 0.5pt Color.black) (idx-col, 0) (idx-col, -1)
-  let horizrule idx-row = genrule (stroke 0.5pt Color.black) (0, idx-row) (-1, idx-row)
+  let toprule = genrule (stroke 1pt Color.black) (0, 0) (0, -1)
+  let bottomrule = genrule (stroke 1pt Color.black) (-1, 0) (-1, -1)
+  let vertrule idx-col = genrule (stroke 0.5pt Color.black) (0, idx-col) (-1, idx-col)
+  let horizrule idx-row = genrule (stroke 0.5pt Color.black) (idx-row, 0) (idx-row, -1)
   let diagrule = genrule (stroke 0.5pt Color.black)
 
   let midrule idx-row xs ys =
@@ -268,6 +270,8 @@ end = struct
       draw-text (x, y) ib-rule;
       draw-text (x, y) ib-table;
     ])
+
+  let-inline ctx \multicell m n it = inline-nil
 
 end
 

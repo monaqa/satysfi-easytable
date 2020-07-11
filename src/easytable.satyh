@@ -43,8 +43,6 @@ module EasyTable: sig
   direct \easytable: [(ruleptn list)?; (cellfmt list); (inline-text list)] inline-cmd
   direct \list-table: [(ruleptn list)?; (cellfmt list); itemize] inline-cmd
 
-  direct \multicell : [int; int; inline-text] inline-cmd
-
 end = struct
 
 % cell format
@@ -246,8 +244,6 @@ end = struct
       draw-text (x, y) ib-table;
     ])
 
-  let-inline ctx \multicell m n it = inline-nil
-
 end
 
 
@@ -256,11 +252,11 @@ module EasyTableAlias : sig
   val l : cellfmt
   val c : cellfmt
   val r : cellfmt
-  val e : cellfmt
   val lw : length -> cellfmt
   val cw : length -> cellfmt
   val rw : length -> cellfmt
-  val ew : length -> cellfmt
+  val eq-sp : cellfmt
+  val eq-wd : length -> cellfmt
 
   val mgn : length -> length -> cellfmt -> cellfmt
 
@@ -282,11 +278,11 @@ end = struct
   let l = EasyTable.align-left
   let c = EasyTable.align-center
   let r = EasyTable.align-right
-  let e = EasyTable.equal-spacing
   let lw = EasyTable.align-left-with-width
   let cw = EasyTable.align-center-with-width
   let rw = EasyTable.align-right-with-width
-  let ew = EasyTable.equal-spacing-with-width
+  let eq-sp = EasyTable.equal-spacing
+  let eq-wd = EasyTable.equal-spacing-with-width
 
   let mgn = EasyTable.margin
 

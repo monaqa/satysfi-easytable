@@ -1,4 +1,4 @@
-@require: stdja
+@require: stdjabook
 @require: code
 @require: color
 @require: hdecoset
@@ -10,10 +10,9 @@ open EasyTableAlias
 
 % 単項演算子のマイナスを出す標準の方法がわからんかった
 let-math \minus = math-char MathOp `−`
-
 let-block ctx +ctx ctxf bt = read-block (ctxf ctx) bt
 
-let document record content = StdJa.document record '<%
+let document record content = StdJaBook.document record '<%
   +ctx(fun ctx -> (
     let fsize = get-font-size ctx in
     ctx |> set-paragraph-margin fsize fsize
@@ -32,6 +31,9 @@ let-block +example str bt =
     +block-frame(bt);
   >%
 
+let-inline ctx \br skip =
+  discretionary (- 1000) inline-nil ((inline-graphics 0pt 0pt skip (fun (x, y) -> [])) ++ inline-fil) inline-nil
+
 in
 
 document (|
@@ -48,7 +50,7 @@ document (|
     Easytable パッケージは， \SATySFi; 上で楽に表を組むためのパッケージです．
     \SATySFi; には既に表を組むためのパッケージがいくつか標準で用意されていますが，
     いずれも単純な表を描くには少々複雑な構文を要求されるものでした．
-    そこで，「ある程度単純な，しかし汎用性の高い表を，楽に組めるようにする」ための easytable パッケージを開発しました．
+    本パッケージは，単純であるもののある程度の汎用性を備えた，そんな表を楽に組めるようにするためのものです．
     対象を「ある程度単純な表」に絞っていることからも察される通り，
     本パッケージで組める表には以下の制約があります．
     \listing{
@@ -56,115 +58,460 @@ document (|
         すなわち，同一列の中で揃え方を変更することはできない．
       * MultiCell（複数の行または列にわたるセル）は使えない．
     }%
-    これらの制約を入れてユーザが設定しなければならないパラメータを最小限に抑えることで，
-    組みやすいインターフェースを実現しています．
+    しかし，世の中で必要とされる表の多くはこれらの機能を使わずに組むことができます．
+    ユーザが設定しなければならないパラメータを最小限に抑えることで API の複雑化を防ぎ，
+    組みやすいコマンドを実現しています．
 
-  }
->%
-
-+section{Easytable パッケージが提供する機能}<%
-
-  +p{
-    本パッケージが提供するコマンドは2つです．
-  }
-
-  +listing{
-    * `\easytable: [(ruleptn list)?; (cellfmt list); (inline-text list)] inline-cmd`:
-      2つの引数 （`cellfmt list` 型，`inline-text list` 型）及び
-      1つのオプション引数（`ruleptn list` 型）をとります．
-    * `\list-table: [(ruleptn list)?; (cellfmt list); itemize] inline-cmd`
   }
 >%
 
 +section{Gallery}<%
+
   +p{
-    ソースコードは同梱の saty ファイルの対応する箇所をご覧ください．
-    以下は最も単純な表の例です．
-    左揃え，中央揃え，右揃えの設定は列ごとに設定します．
-    罫線は設定で変えられますが，デフォルトでは表の最初と最後に太い線，そして
-    ヘッダ行（デフォルトでは1行目とみなされます）の下に細い線が入るようになっています．
+    具体例から説明したほうが理解が進みやすいと考え，
+    具体的なコード例とともに出来上がりの表を載せています．
+    以下では easytable パッケージが正常にインストールされており，
+    かつ以下のようなコードで正常にインポートされているものとします．
   }
 
+  +code(```
+        @require: easytable
+        open EasyTableAlias
+    ```);
+
   +p{
-    \easytable[l;c;r]{
-      | header1 | header2 | header3
-      | align left | align center | align right
-      | a | b | c
-      |}
+    なお以下のコードをより簡潔にするため，
+    上のコードでは `easytable` のインポートだけでなく，
+    中にある `EasyTableAlias` モジュールを open することで
+    その中身に直接アクセスできるようにしています．
   }
 
-  +p{
-    以下は少し複雑な例です．
-    オプション引数を用いてどこに罫線を引くか指定することができます．
-    また，列幅は指定することができます．
-    なお，表の中身として指定するのはインラインテキストですから，
-    インラインコマンドを用いて書式を変えることができます．
-    数式を入れることもできます．
-  }
 
-  +p{
-    \easytable?:[t; b; m 1; m 4; v 1; v 3][l;c;r;lw 200pt]{
-      | header1    | header2      | header3     | header4
-      | align left | align center | align right | align center with width 200pt
-      | \emph{align left}
-      | align center
-      | align right
-      | \code(`align center with width 200pt`);
-      | align left | align center | align right | align center with width 200pt
-      | a          | b            | c           | d
-      | a          | b            | c           | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
-      | a          | b            | c           | d
-      |}
-  }
-
-  +p{
-    表にある程度長いテキストを入れたくなることもあるでしょう．
-    列幅を指定すれば，長いインラインテキストを折り返すことができます．
-    ただし，複数行に渡るインラインテキストを中央揃えや右揃えにすることは現状できませんから，
-    長いテキストが入る列では左揃えを選択するようにしてください．
-    なお，長い文章を入れたい場合などは，
-    箇条書き形式で表に要素を入れることのできる
-    \code(`\list-table`); コマンドが便利です．
-  }
-
-  +p{
-    \list-table?:[t; b; m 1; v 1; v 2][rw 90pt; lw 60pt;lw 180pt;]{
-      *
-        ** Treat
-        ** Quantity
-        ** Description
-
-      *
-        ** Albatross
-        ** 2.99
-        ** On a stick!
-
-      *
-        ** Crunchy Frog
-        ** 1.49
-        ** If we took the bones out, it wouldn't be crunchy, now would it?
-
-      *
-        ** Gannet Ripple
-        ** 1.99
-        ** On a stick!
+  +subsection{単純な表}<%
+    +p{
+      本パッケージを用いて表を組むためには，以下のように `\easytable` コマンドを用います．
     }
-  }
+
+    +example(```
+        \easytable[l;c;r]{
+          | header1    | header2      | header3
+          | align left | align center | align right
+          | a          | b            | c
+          |}
+    ```)<%
+      +p{
+        \easytable[l;c;r]{
+          | header1    | header2      | header3
+          | align left | align center | align right
+          | a          | b            | c
+          |}
+      }
+
+    >%
+
+    +p{
+      このように，非常に単純な文法で表を組むことができます．
+      `\easytable`は2つの必須引数を取り，1番目で各列の体裁，2番目で表の中身を指定します．
+      1番目は `cellfmt` 型と呼ばれる型のリストであり，
+      ${n}番目の要素が「左から数えて${n}番目の列をどのように揃えるか」
+      を表しています．
+      上の例では `[l; c; r]` を指定することで，
+      列が左から順にそれぞれ左揃え，中央揃え，右揃えとなっています．
+      2番目はインラインテキスト型のリストです．
+      引数として指定するのは1次元配列のようなデータ構造ですが，
+      内部で2次元の構造（リストのリスト）へと変換されて表として組まれます．
+      インラインテキストのリストは普通に書くならば `[{a}; {b}; {c}]` と表すことになりますが，
+      \SATySFi; にはこれを `{|a|b|c|}` と表記する糖衣構文があります．
+      `\easytable` コマンドはこの構文を積極的に活用し，
+      Markdown や AsciiDoc のような軽量マークアップ言語に近い書き易さを実現しています．
+    }
+    +p{
+      なお，改行を含めた余剰なスペースは単にコードの見やすさのために入れているだけであり，
+      たとえば以下のように書いても結果は変わりません．
+      読みやすさ，編集のしやすさなどを考えて調整するとよいでしょう．
+    }
+
+    +code(```
+        \easytable[l;c;r]{| header1 | header2 | header3 | align left
+        | align center | align right | a | b | c |}
+    ```);
+
+    +p{
+      「結果は変わらない」ということから分かる通り，上のコマンドから得られるのは3行3列の表です．
+      すなわち，列の数は第2引数の改行の位置ではなく，第1引数のリストの長さによって決定されます．
+      この仕様は意識しなければ非直観的な組版結果を生んでしまう原因になるため注意してください．
+    }
+
+    +p{
+      第2引数に渡すのはインラインテキストですから，
+      インラインコマンドを用いた装飾や，数式の挿入も可能です．
+      （使う機会があるかはともかく）表の入れ子もできます．
+    }
+
+    +example(```
+        \easytable[r; c]{
+          |       | 例
+          | Emph  | \emph{強調されたテキスト}
+          | Code  | \code(`some code`);
+          | Math  | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
+          | Inner table |
+          \easytable[l; r]{
+            | header 1 | header 2
+            | a        | b
+            |}
+          |}
+    ```)<%
+      +p{
+        \easytable[r; c]{
+          |       | 例
+          | Emph  | \emph{強調されたテキスト}
+          | Code  | \code(`some code`);
+          | Math  | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
+          | Inner table |
+          \easytable[l; r]{
+            | header 1 | header 2
+            | a        | b
+            |}
+          |}
+      }
+    >%
+
+    +p{
+      1番目に渡す `cellfmt` 型のリストに
+      `l` ではなく `lw (length)` を渡すことによって，
+      表の横幅を指定することができます．
+      このとき，表の横幅よりも長いインラインテキストが表の中にあれば，
+      \SATySFi; の本体で用意されている行分割アルゴリズムに従って行分割されます．
+      表の中に長い文章を書く場合に便利です．
+    }
+
+    +example(```
+        \easytable[l; lw 120pt; lw 120pt;]{
+          | Column 1 | Column 2   | Column 3
+          | 通常の列 | 横幅 120pt
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          |}
+    ```)<%
+      +p{
+        \easytable[l; lw 120pt; lw 120pt;]{
+          | Column 1 | Column 2   | Column 3
+          | 通常の列 | 横幅 120pt
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          |}
+      }
+    >%
+
+    +p{
+      同様に列幅を指定できるオプションとして，
+      中央揃えの `cw` と右揃えの `lw` も用意されています．
+      ただし，これらのオプションを指定しても，
+      長いテキストを入れたときに段落が中央揃えや右揃えになるわけではなく，
+      段落内は全て左揃えで組まれます
+      \footnote{
+        これはどちらかというと，\SATySFi; で単なるインラインテキストを
+        右揃えや中央揃えの段落にする汎用的な手段が現状用意されていないのが原因です．
+      }．
+      その点には注意が必要です．
+    }
+
+    +example(```
+        \easytable[lw 120pt; cw 120pt; rw 120pt;]{
+          | Align left | Align center | Align right
+          | short text | short text   | short text
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          |}
+    ```)<%
+      +p{
+        \easytable[lw 120pt; cw 120pt; rw 120pt;]{
+          | Align left | Align center | Align right
+          | short text | short text   | short text
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+          |}
+      }
+    >%
+
+  >%
+
+  +subsection{罫線の指定}<%
+
+    +p{
+      表において，罫線は視覚的に重要な意味を持つと考えられます．
+      今までの例にて見た通り，
+      デフォルトでは表の上下に太い線を，そして1行目の下に細い線を引いています．
+      これは1行目がヘッダ行を，それ以降の列がコンテンツという
+      標準的な表に対しては自然なレイアウトとなりますが，
+      場合によってはヘッダ行がなかったり，
+      ヘッダ列があったりするような表も描きたいことが当然考えられます．
+    }
+
+    +p{
+      本パッケージではそのような需要にもできるだけ簡単なインターフェースで対応できるよう，
+      オプション引数で罫線を制御できるようにしています．
+      オプション引数は `ruleptn` と呼ばれる型のリストであり，
+      引きたい罫線の種類を羅列します．
+      まず最も単純な場合として
+      オプション引数に空のリストを与えた場合，
+      罫線が全く引かれない表が組まれます．
+    }
+
+    +example(```
+        \easytable?:[][r; c; l]{
+          | How       | I       | want
+          | a         | drink   | alcoholic
+          | of        | course  | after
+          | the       | heavy   | lectures
+          | involving | quantum | mechanics
+          |}
+    ```)<%
+      +p{
+        \easytable?:[][r; c; l]{
+          | How       | I       | want
+          | a         | drink   | alcoholic
+          | of        | course  | after
+          | the       | heavy   | lectures
+          | involving | quantum | mechanics
+          |}
+      }
+    >%
+
+    +p{
+      やはり少し寂しいので，上下に罫線を引くことにしましょう．
+      オプション引数のリストに `t` を追加すると上に，
+      `b` を追加すると下に，それぞれ太い罫線が引かれます．
+    }
+
+    +example(```
+        \easytable?:[t][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+        \easytable?:[t; b][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+    ```)<%
+      +p{
+        \easytable?:[t][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+        \easytable?:[t; b][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+      }
+    >%
+
+    +p{
+      表の途中に水平線を引きたい，というのもよくあることです．
+      その場合には `m (int)` を用いることができます．
+      `m` の引数は整数であり，正の数${n}を指定すれば
+      ${n} 行目の真下に線が引かれます．
+      また，負の数${\minus n}を指定したときは，
+      最後から数えて ${n} 行目の真下に線が引かれます．
+    }
+
+    +example(```
+        \easytable?:[t; b; m 2][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+        \easytable?:[t; b; m (-2)][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+    ```)<%
+      +p{
+        \easytable?:[t; b; m 2][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+        \easytable?:[t; b; m (-2)][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+      }
+    >%
+
+    +p{
+      ここまでくれば予想がついたかもしれませんが，
+      オプション引数のデフォルト値は `[t; b; m 1]` です．
+    }
+
+    +p{
+      列を分けるために縦に線を引くスタイルも，日本では特によく見かけます．
+      `v (int)` で列の境目に鉛直方向の線を引くことができます．
+      引数の意味は `m` のときと同様，左から数えて何番目に線を引くかを表します．
+    }
+
+    +p{
+      もう少し自由度の高い罫線が引きたい場合は， `d (int, int) (int, int)` を指定します．
+    }
+
+    +example(```
+        \easytable?:[t; b; d (0, 0) (1, 1); d (3, 1) (1, -1)][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+    ```)<%
+      +p{
+        \easytable?:[t; b; d (0, 0) (1, 1); d (3, 1) (1, -1)][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+      }
+    >%
+
+    +p{
+      表全体を太い外枠で囲むときは `rect` を使うことができます．
+    }
+
+    +example(```
+        \easytable?:[rect][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+    ```)<%
+      +p{
+        \easytable?:[rect][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+      }
+    >%
+
+    +p{
+      罫線とは違いますが，オプション引数では表の背景色を指定することもできます．
+      表全体の背景色を指定するには `bg-a (color)` を，
+      特定の範囲の列の背景色を指定するには `bg-c (color) (int) (int)` を，
+      特定の範囲の行の背景色を指定するには `bg-r (color) (int) (int)` を用います．
+      罫線，背景色ともに指定された順にグラフィックスが上書きされていきます．
+      従って，罫線を引きたいときは背景色を指定した後に罫線を指定するのがよいでしょう．
+    }
+
+    +example(```
+        \easytable?:[bg-c (Color.red) 1 2][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+        \easytable?:[
+          bg-a (Color.gray 0.8);
+          bg-c (Color.red) 1 2;
+          bg-r (Color.yellow) 1 3;
+          t; b; v 1;
+        ][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+    ```)<%
+      +p{
+        \easytable?:[bg-c Color.red 1 2][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+        \easytable?:[
+          bg-a (Color.gray 0.8);
+          bg-c (Color.red) 1 2;
+          bg-r (Color.yellow) 1 3;
+          t; b; v 1;
+        ][r; c; l]{
+          | How | I | want | a | drink | alcoholic | of | course
+          | after | the | heavy | lectures | involving | quantum | mechanics
+          |}
+      }
+    >%
+
+  >%
+  
+  +subsection{その他の機能}<%
+    +p{
+      長い文章を入れたい場合などは，
+      箇条書き形式で表に要素を入れることのできる
+      \code(`\list-table`); コマンドが便利です．
+    }
+
+    +example(```
+      \list-table?:[t; b; m 1; v 1; v 2][rw 90pt; l; lw 180pt;]{
+        *
+          ** Treat
+          ** Quantity
+          ** Description
+
+        *
+          ** Albatross
+          ** 2.99
+          ** On a stick!
+
+        *
+          ** Crunchy Frog
+          ** 1.49
+          ** If we took the bones out,
+             it wouldn't be crunchy, now would it?
+
+        *
+          ** Gannet Ripple
+          ** 1.99
+          ** On a stick!
+      }
+  ```)<%
+    +p{
+      \list-table?:[t; b; m 1; v 1; v 2][rw 90pt; l; lw 180pt;]{
+        *
+          ** Treat
+          ** Quantity
+          ** Description
+
+        *
+          ** Albatross
+          ** 2.99
+          ** On a stick!
+
+        *
+          ** Crunchy Frog
+          ** 1.49
+          ** If we took the bones out,
+             it wouldn't be crunchy, now would it?
+
+        *
+          ** Gannet Ripple
+          ** 1.99
+          ** On a stick!
+      }
+    }
+  >%
+  >%
+
+  % old
 
   +p{
     以下は単純な例で，なんとなく数学書の最初に載っていそうな表です．
     これぐらいシンプルな表は，やはりシンプルに書きたいものです．
   }
 
-  +p{
-    \easytable?:[t; b][c; l]{
-      | ${\bm{N}} | 自然数全体の集合
-      | ${\bm{Z}} | 整数全体の集合
-      | ${\bm{Q}} | 有理数全体の集合
-      | ${\bm{R}} | 実数全体の集合
-      | ${\bm{C}} | 複素数全体の集合
-      |}
-  }
+  +example(```
+      \easytable?:[t; b][c; l]{
+        | ${\bm{N}} | 自然数全体の集合
+        | ${\bm{Z}} | 整数全体の集合
+        | ${\bm{Q}} | 有理数全体の集合
+        | ${\bm{R}} | 実数全体の集合
+        | ${\bm{C}} | 複素数全体の集合
+        |}
+        }
+  ```)<%
+    +p{
+      \easytable?:[t; b][c; l]{
+        | ${\bm{N}} | 自然数全体の集合
+        | ${\bm{Z}} | 整数全体の集合
+        | ${\bm{Q}} | 有理数全体の集合
+        | ${\bm{R}} | 実数全体の集合
+        | ${\bm{C}} | 複素数全体の集合
+        |}
+        }
+  >%
 
   +p{
     以下も比較的単純な表です．
@@ -173,19 +520,94 @@ document (|
   }
 
   +p{
-    \easytable?:[
-    bg-r (Color.gray 0.9) 0 1;
-    bg-c (Color.gray 0.9) 0 1;
-    d (0, 0) (1, 1);
-    v 1; h 1;
-    rect;
-    ][c; c; c; c;]{
-      |      | ${e} | ${g} | ${h}
-      | ${e} | ${e} | ${g} | ${h}
-      | ${g} | ${g} | ${h} | ${e}
-      | ${h} | ${h} | ${e} | ${g}
-      |}
   }
+  +example(```
+      \easytable?:[
+        d (0, 0) (1, 1);
+        v 1; h 1;
+        rect;
+      ][c; c; c; c;]{
+        |      | ${e} | ${g} | ${h}
+        | ${e} | ${e} | ${g} | ${h}
+        | ${g} | ${g} | ${h} | ${e}
+        | ${h} | ${h} | ${e} | ${g}
+        |}
+      \easytable?:[
+        bg-r (Color.gray 0.9) 0 1;
+        bg-c (Color.gray 0.9) 0 1;
+        v 1; h 1;
+        rect;
+      ][c; c; c; c;]{
+        |      | ${e} | ${g} | ${h}
+        | ${e} | ${e} | ${g} | ${h}
+        | ${g} | ${g} | ${h} | ${e}
+        | ${h} | ${h} | ${e} | ${g}
+        |}
+  ```)<%
+    +p{
+      \easytable?:[
+        d (0, 0) (1, 1);
+        v 1; h 1;
+        rect;
+      ][c; c; c; c;]{
+        |      | ${e} | ${g} | ${h}
+        | ${e} | ${e} | ${g} | ${h}
+        | ${g} | ${g} | ${h} | ${e}
+        | ${h} | ${h} | ${e} | ${g}
+        |}
+      \easytable?:[
+        bg-r (Color.gray 0.9) 0 1;
+        bg-c (Color.gray 0.9) 0 1;
+        v 1; h 1;
+        rect;
+      ][c; c; c; c;]{
+        |      | ${e} | ${g} | ${h}
+        | ${e} | ${e} | ${g} | ${h}
+        | ${g} | ${g} | ${h} | ${e}
+        | ${h} | ${h} | ${e} | ${g}
+        |}
+    }
+  >%
+
++section{Easytable パッケージが提供する機能}<%
+
+  +subsection{コマンド}<%
+    +p{
+      本パッケージが提供するコマンドは2つです．
+      `ruleptn` 及び `cellfmt` 型の説明は後述します．
+    }
+
+    +listing{
+      * `\easytable?:[rule-pattern][cell-format]{| contents |}`\br(0pt);
+
+        `{| contents |}` の内容を表にします．\br(8pt);
+
+        \easytable[l;l;l;l;]{
+          | 引数 | 型 | 種類 | 内容
+          | `rule-pattern` | `ruleptn list`     | Optional | 罫線の設定
+          | `cell-format`  | `cellfmt list`     | Needed   | ${n}番目の列の体裁（揃え方）
+          | `contents`     | `inline-text list` | Needed   | 表の中身
+          |}
+
+      * `\list-table?:[ruleptn list][cellfmt list]{* itemize }`\br(0pt);
+
+      `{* itemize }` の内容を表にします．\br(8pt);
+
+      \easytable[l;l;l;l;]{
+        | 引数 | 型 | 種類 | 内容
+        | `rule-pattern` | `ruleptn list` | Optional | 罫線の設定
+        | `cell-format`  | `cellfmt list` | Needed   | ${n}番目の列の体裁（揃え方）
+        | `contents`     | `itemize`      | Needed   | 表の中身
+        |}
+
+      }
+
+    +p{
+      もう少し具体的な使い方は，後の具体例を見たほうが早いでしょう．
+    }
+  >%
+
+>%
 
 % いつか書きたいこと
 % SATySFi における表組版の方針

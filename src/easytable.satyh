@@ -12,6 +12,10 @@ type cellfmt = context -> inline-text -> cell
 
 module EasyTable: sig
 
+% useful functions
+
+  val convenient-nth : int -> 'a list -> 'a option
+
 % cell format
   val align-left   : cellfmt
   val align-center : cellfmt
@@ -25,7 +29,7 @@ module EasyTable: sig
   val margin : length -> length -> cellfmt -> cellfmt
 
 % rule pattern
-  val genrule: ((length * length) -> (length * length) -> graphics list) -> (int * int) -> (int * int) -> ruleptn
+  val genrule: (point -> point -> graphics list) -> (int * int) -> (int * int) -> ruleptn
   val toprule: ruleptn
   val bottomrule: ruleptn
   val midrule: int -> ruleptn

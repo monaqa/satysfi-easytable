@@ -3,12 +3,12 @@
 @require: color
 @require: hdecoset
 % @require: math
-@require: itemize
+@require: enumitem/enumitem
 @import: ../src/easytable
 
 open EasyTableAlias
 
-% 単項演算子のマイナスを出す標準の方法がわからんかった
+% 単項演算子のマイナス
 let-math \minus = math-char MathOp `−`
 let-block ctx +ctx ctxf bt = read-block (ctxf ctx) bt
 
@@ -31,7 +31,10 @@ let-block +example str bt =
     +block-frame(bt);
   >%
 
-let-inline ctx \br skip =
+let-inline ctx \br =
+  discretionary (- 1000) inline-nil inline-fil inline-nil
+
+let-inline ctx \br-skip skip =
   discretionary (- 1000) inline-nil ((inline-graphics 0pt 0pt skip (fun (x, y) -> [])) ++ inline-fil) inline-nil
 
 in
@@ -39,9 +42,9 @@ in
 document (|
   title = {Easytable パッケージ};
   author = {\@monaqa};
-  date = {2020/01/16};
+  date = {2020/07/12};
   show-title = true;
-  show-toc = true;
+  show-toc = false;
 |) '<%
 
 +section{Easytable パッケージの概要}<%
@@ -500,7 +503,7 @@ document (|
     ```)<%
       +p{
         \easytable?:[t; b; m 1; v 2]
-        [r |> mgn 10pt 0pt; l |> mgn 0pt 10pt; e]{
+        [r |> mgn 10pt 0pt; l |> mgn 0pt 10pt; eq-sp]{
           | 月/|日 | 2020 年 の 祝 日
           |  1/|1  | 元 日
           |  1/|13 | 成 人 の 日
@@ -542,9 +545,9 @@ document (|
     }
 
     +listing{
-      * `\easytable?:[rule-pattern][cell-format]{| contents |}`\br(0pt);
+      * `\easytable?:[rule-pattern][cell-format]{| contents |}`\br;
 
-        `{| contents |}` の内容を表にします．\br(8pt);
+        `{| contents |}` の内容を表にします．\br-skip(8pt);
 
         \easytable[l;l;l;l;]{
           | 引数 | 型 | 種類 | 内容
@@ -553,9 +556,9 @@ document (|
           | `contents`     | `inline-text list` | Needed   | 表の中身
           |}
 
-      * `\list-table?:[ruleptn list][cellfmt list]{* itemize }`\br(0pt);
+      * `\list-table?:[ruleptn list][cellfmt list]{* itemize }`\br;
 
-      `{* itemize }` の内容を表にします．\br(8pt);
+      `{* itemize }` の内容を表にします．\br-skip(8pt);
 
       \easytable[l;l;l;l;]{
         | 引数 | 型 | 種類 | 内容
@@ -574,25 +577,123 @@ document (|
       既に見たとおり，1番目の必須引数である `cell-format` を用いることで
       セルの書式を列ごとに指定することができます．
       `cell-format` は `cellfmt list` 型を持ち，
-      `cellfmt` とは `context -> inline-text -> cell` 型のエイリアスです．
+      `cellfmt` とは `context -> inline-text -> cell` 型のシノニムです．
       すなわち，
       「テキスト処理文脈と表のコンテンツが与えられたとき，それをセルへと変換する」ための関数です．
+    }
+
+    +p{
+      `cell-format` の要素には自分で定義した関数を指定することもできますが，
+      主要と思われるものについては `EasyTable` モジュールにて用意されています．
+      さらにそれらのほとんどには
+      `EasyTableAlias` モジュールにてより短い名前の関数が当てがわれています．
+      ユーザが好みに応じて `EasyTableAlias` モジュールを `open` することで，
+      あたかも \LaTeX; の tabular 環境のように書式を簡便に指定できる仕組みとなっています．
+    }
+
+    +listing{
+      * `EasyTable.align-left` (alias: `EasyTableAlias.l`)\br;%
+        `cellfmt` 型．入力されたテキストをそのまま組み，左揃えにして表示します．
+      * `EasyTable.align-center` (alias: `EasyTableAlias.c`)\br;%
+        `cellfmt` 型．入力されたテキストをそのまま組み，中央揃えにして表示します．
+      * `EasyTable.align-right` (alias: `EasyTableAlias.r`)\br;%
+        `cellfmt` 型．入力されたテキストをそのまま組み，右揃えにして表示します．
+      * `EasyTable.align-left-with-width` (alias: `EasyTableAlias.lw`)\br;%
+        `length -> cellfmt` 型．
+        入力されたテキストをそのまま組み，
+        得られた横幅が指定した長さより短ければそのまま左揃えにして表示し，
+        長ければ行を折り返します．
+        \SATySFi; の行分割アルゴリズムを使用しているため，
+        コストの関係で折り返しが最適解と判断されなければ，
+        折り返されない場合もあります．
+      * `EasyTable.align-center-with-width` (alias: `EasyTableAlias.cw`)\br;%
+        `length -> cellfmt` 型．
+        入力されたテキストをそのまま組み，
+        得られた横幅が指定した長さより短ければそのまま中央揃えにして表示し，
+        長ければ行を折り返します．
+      * `EasyTable.align-right-with-width` (alias: `EasyTableAlias.rw`)\br;%
+        `length -> cellfmt` 型．
+        入力されたテキストをそのまま組み，
+        得られた横幅が指定した長さより短ければそのまま右揃えにして表示し，
+        長ければ行を折り返します．
+      * `EasyTable.equal-spacing` (alias: `EasyTableAlias.eq-sp`)\br;%
+        `cellfmt` 型．
+        入力されたテキストを均等割り付けにします．
+        単語間空白の伸長方向のペナルティを極端に下げるという単純な実装のため，
+        インラインテキストの時点で半角空白などの空白がないものには恐らく効果がありません．
+      * `EasyTable.equal-spacing-with-width` (alias: `EasyTableAlias.eq-wd`)\br;%
+        `length -> cellfmt` 型．
+        横幅を指定して，入力されたテキストを均等割り付けにします．
+    }
+
+    +p{
+      さらに， `cellfmt` 型の値を変換するための以下の関数を用意しています．
+    }
+
+    +listing{
+      * `EasyTable.margin` (alias: `EasyTableAlias.mgn`)\br;%
+        `length -> length -> cellfmt -> cellfmt` 型．
+        `cfmt |> EasyTable.margin len1 len2` とすることで，
+        `cfmt` の書式のマージンを左側が `len1`，右側が`len2`となるように変更します．
+        なお，特に `EasyTable.margin` を用いなかったときに定まる
+        デフォルトのマージンは左右ともにフォントサイズの0.5倍です．
+    }
+
+  >%
+
+  +subsection{罫線の設定}<%
+    +p{
+      `\easytable` コマンドのオプション引数では，
+      `ruleptn list` 型の値を指定することで罫線の引き方を指定することができます．
+      `ruleptn` は `length list -> length list -> graphics list` 型のシノニムであり，
+      この型の意味は tabular プリミティヴの第2引数とほぼ変わりません．
+      すなわち，表の格子点に相当する点の${x}座標及び${y}座標のリストが与えられたとき，
+      （イメージとしては，表の内容が決まって「セルの境界線」が定まったとき）
+      線をどこにどのように引くべきかを指定したグラフィックスのリストを返す，というものです．
+      こちらもやはり自分で定義した関数を指定できますが，主要なものは予め用意されています．
+    }
+
+    +listing{
+      * `EasyTable.toprule` (alias: `EasyTableAlias.t`)\br;%
+        `ruleptn`型．表の一番上に太い黒線を引きます．
+      * `EasyTable.bottomrule` (alias: `EasyTableAlias.b`)\br;%
+        `ruleptn`型．表の一番下に太い黒線を引きます．
+      * `EasyTable.vertrule` (alias: `EasyTableAlias.v`)\br;%
+        `int -> ruleptn`型． `vertrule n` とすると，
+        左から数えて ${n} 番目のインデックスを持つところに細い黒の鉛直線を引きます．
+      * `EasyTable.horizrule` (alias: `EasyTableAlias.h`)\br;%
+        `int -> ruleptn`型． `horzrule n` とすると，
+        上から数えて ${n} 番目のインデックスを持つところに細い黒の水平線を引きます．
+      * `EasyTable.midrule` (alias: `EasyTableAlias.m`)\br;%
+        `int -> ruleptn`型．`horzrule` と似ていますが，こちらは両端が少し短くなります．
+      * `EasyTable.diagrule` (alias: `EasyTableAlias.d`)\br;%
+        `(int * int) -> (int * int) -> ruleptn`型．
+        `diagrule (i1, j1) (i2, j2)` とすると，
+        右上から数えて `(i1, j1)` 番目にある格子点から
+        `(i2, j2)` 番目にある格子点にかけて細い黒の直線を引きます．
+      * `EasyTable.outerframerule` (alias: `EasyTableAlias.rect`)\br;%
+        `ruleptn`型．表に太い黒の外枠を付けます．
+    }
+
+    +p{
+      罫線だけでなく，表の背景色も指定できます．
+    }
+
+    +listing{
+      * `EasyTable.whole-bgcolor` (alias: `EasyTableAlias.bg-a`)\br;%
+        `color -> ruleptn`型．表全体の背景色を指定した色に設定します．
+      * `EasyTable.column-bgcolor` (alias: `EasyTableAlias.bg-c`)\br;%
+        `color -> int -> int -> ruleptn`型．
+        `column-bgcolor clr n m` で，`n` 番目から `m` 番目にかけての列を指定した色で塗り潰します．
+      * `EasyTable.row-bgcolor` (alias: `EasyTableAlias.bg-r`)\br;%
+        `color -> int -> int -> ruleptn`型．
+        `row-bgcolor clr n m` で，`n` 番目から `m` 番目にかけての行を指定した色で塗り潰します．
     }
 
   >%
 
 >%
 
-% いつか書きたいこと
-% SATySFi における表組版の方針
-% easytable の立ち位置，スタンス
-  % 制約: MultiCell, 行ごとに異なる align は現時点ではできない
-% 基本的な使い方
-  % 簡単な表
-  % （同じことを SATySFi の標準パッケージでやるとどう書く必要があるか）
-% 必須引数の説明
-% オプション引数の説明
-  % 少し複雑な表
 >%
 
 >%

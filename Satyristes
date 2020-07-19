@@ -1,0 +1,26 @@
+;; For Satyrographos 0.0.2 series
+(version 0.0.2)
+
+(library
+  (name "easytable")
+  (version "2.0.0")
+  (sources
+    (
+     (package "easytable.satyh" "./src/easytable.satyh")
+     (package "matrix.satyg" "./src/matrix.satyg")))
+  (opam "satysfi-easytable.opam")
+  (dependencies
+    (
+     (base ())))
+  (compatibility ((satyrographos "0.0.1"))))
+
+(libraryDoc
+  (name "easytable-doc")
+  (version "2.0.0")
+  (workingDirectory "doc")
+  (build
+    ((satysfi "easytable.saty" "-o" "easytable.pdf")))
+  (sources
+    ((doc "easytable.pdf" "doc/easytable.pdf")))
+  (opam "satysfi-easytable-doc.opam")
+  (dependencies ((easytable ()))))

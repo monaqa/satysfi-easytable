@@ -556,9 +556,9 @@ document (|
           | `contents`     | `inline-text list` | Needed   | 表の中身
           |}
 
-      * `\list-table?:[ruleptn list][cellfmt list]{* itemize }`\br;
+      * `\list-table?:[rule-pattern][cell-format]{* contents }`\br;
 
-      `{* itemize }` の内容を表にします．\br-skip(8pt);
+      `{* contents }` の内容を表にします．\br-skip(8pt);
 
       \easytable[l;l;l;l;]{
         | 引数 | 型 | 種類 | 内容
@@ -574,21 +574,21 @@ document (|
   +subsection{セルの書式指定}<%
 
     +p{
-      既に見たとおり，1番目の必須引数である `cell-format` を用いることで
-      セルの書式を列ごとに指定することができます．
-      `cell-format` は `cellfmt list` 型を持ち，
-      `cellfmt` とは `context -> inline-text -> cell` 型のシノニムです．
-      すなわち，
-      「テキスト処理文脈と表のコンテンツが与えられたとき，それをセルへと変換する」ための関数です．
+      既に見たとおり，1番目の必須引数である `cell-format` （`cellfmt list` 型）
+      を用いることでセルの書式を列ごとに指定することができます．
+      ここで `cellfmt` とは `context -> inline-text -> cell` 型のシノニムであり，
+      「テキスト処理文脈と表のコンテンツが与えられたとき，それをセルへと変換する」
+      ための関数です．
     }
 
     +p{
-      `cell-format` の要素には自分で定義した関数を指定することもできますが，
+      `cell-format` の要素には自分で定義した関数を指定することもできるものの，
       主要と思われるものについては `EasyTable` モジュールにて用意されています．
       さらにそれらのほとんどには
-      `EasyTableAlias` モジュールにてより短い名前の関数が当てがわれています．
+      `EasyTableAlias` モジュールにてより短い名前の関数が当てがわれているため，
+      長い名前をいちいち指定する必要がありません．
       ユーザが好みに応じて `EasyTableAlias` モジュールを `open` することで，
-      あたかも \LaTeX; の tabular 環境のように書式を簡便に指定できる仕組みとなっています．
+      あたかも \LaTeX; の tabular 環境のように簡便に書式を指定できる仕組みとなっています．
     }
 
     +listing{

@@ -19,8 +19,8 @@ This package provides the following features:
 
 ## Usage
 
-See [the documentation](doc/easytable.pdf).
+See [the documentation](doc/easytable.pdf) (Japanese only).
 
 ## Examples
 
-See [the documentation](doc/easytable.pdf).
+See [the documentation](doc/easytable.pdf) (Japanese only).

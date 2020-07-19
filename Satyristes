@@ -23,4 +23,7 @@
   (sources
     ((doc "easytable.pdf" "doc/easytable.pdf")))
   (opam "satysfi-easytable-doc.opam")
-  (dependencies ((easytable ()))))
+  (dependencies
+    (
+     (enumitem ())
+     (easytable ()))))

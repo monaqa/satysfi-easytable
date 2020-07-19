@@ -44,7 +44,7 @@ document (|
   author = {\@monaqa};
   date = {2020/07/12};
   show-title = true;
-  show-toc = false;
+  show-toc = true;
 |) '<%
 
 +section{Easytable パッケージの概要}<%
@@ -489,7 +489,7 @@ document (|
     +example(```
       +p{
         \easytable?:[t; b; m 1; v 2]
-        [r |> mgn 10pt 0pt; l |> mgn 0pt 10pt; e]{
+        [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; e]{
           | 月/|日 | 2020 年 の 祝 日
           |  1/|1  | 元 日
           |  1/|13 | 成 人 の 日
@@ -503,7 +503,7 @@ document (|
     ```)<%
       +p{
         \easytable?:[t; b; m 1; v 2]
-        [r |> mgn 10pt 0pt; l |> mgn 0pt 10pt; eq-sp]{
+        [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; eq-sp]{
           | 月/|日 | 2020 年 の 祝 日
           |  1/|1  | 元 日
           |  1/|13 | 成 人 の 日
@@ -516,7 +516,7 @@ document (|
       }
     >%
     +p{
-      1列目では列の設定を `r` ではなく `r |> mgn 10pt 0pt` とすることで，
+      1列目では列の設定を `r` ではなく `r |> hmgn 10pt 0pt` とすることで，
       単に右揃えなだけではなく，
       追加で1列目の左側のマージンを10ptに，右側のマージンを0ptにするという設定を加えています．
       2列目のマージンも同様に設定して左側のマージンを0ptとすることにより，
@@ -631,12 +631,29 @@ document (|
     }
 
     +listing{
-      * `EasyTable.margin` (alias: `EasyTableAlias.mgn`)\br;%
+      * `EasyTable.hmargin` (alias: `EasyTableAlias.hmgn`)\br;%
         `length -> length -> cellfmt -> cellfmt` 型．
-        `cfmt |> EasyTable.margin len1 len2` とすることで，
+        `cfmt |> EasyTable.hmargin len1 len2` とすることで，
         `cfmt` の書式のマージンを左側が `len1`，右側が`len2`となるように変更します．
-        なお，特に `EasyTable.margin` を用いなかったときに定まる
+        なお，特に `EasyTable.hmargin` を用いなかったときに定まる
         デフォルトのマージンは左右ともにフォントサイズの0.5倍です．
+
+      * `EasyTable.hmargin-ratio` (alias: `EasyTableAlias.hmgnr`)\br;%
+        `float -> float -> cellfmt -> cellfmt` 型．
+        `cfmt |> EasyTable.hmargin-ratio r1 r2` とすることで，
+        `cfmt` の書式のマージンを左側が元の `r1`倍，右側が`r2` 倍となるように変更します．
+
+      * `EasyTable.vmargin` (alias: `EasyTableAlias.vmgn`)\br;%
+        `length -> length -> cellfmt -> cellfmt` 型．
+        `cfmt |> EasyTable.vmargin len1 len2` とすることで，
+        `cfmt` の書式のマージンを上が `len1`，下が`len2`となるように変更します．
+        なお，特に `EasyTable.vmargin` を用いなかったときに定まる
+        デフォルトのマージンは上下ともにフォントサイズの0.4倍です．
+
+      * `EasyTable.vmargin-ratio` (alias: `EasyTableAlias.vmgnr`)\br;%
+        `float -> float -> cellfmt -> cellfmt` 型．
+        `cfmt |> EasyTable.vmargin-ratio r1 r2` とすることで，
+        `cfmt` の書式のマージンを上が元の `r1`倍，下が`r2`倍となるように変更します．
     }
 
   >%

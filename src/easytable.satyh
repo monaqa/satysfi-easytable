@@ -26,7 +26,10 @@ module EasyTable: sig
   val equal-spacing : cellfmt
   val equal-spacing-with-width : length -> cellfmt
 
-  val margin : length -> length -> cellfmt -> cellfmt
+  val hmargin : length -> length -> cellfmt -> cellfmt
+  val hmargin-ratio : float -> float -> cellfmt -> cellfmt
+  val vmargin : length -> length -> cellfmt -> cellfmt
+  val vmargin-ratio : float -> float -> cellfmt -> cellfmt
 
 % rule pattern
   val genrule: (point -> point -> graphics list) -> (int * int) -> (int * int) -> ruleptn
@@ -112,12 +115,36 @@ end = struct
     in
     NormalCell(default-pads ctx, ib)
 
-  let margin l r cfmt ctx it =
+  let hmargin l r cfmt ctx it =
     match cfmt ctx it with
       | NormalCell((pl, pr, pt, pb), ib) ->
           NormalCell((l, r, pt, pb), ib)
       | MultiCell(i, j, (pl, pr, pt, pb), ib) ->
           MultiCell(i, j, (l, r, pt, pb), ib)
+      | EmptyCell -> EmptyCell
+
+  let hmargin-ratio l r cfmt ctx it =
+    match cfmt ctx it with
+      | NormalCell((pl, pr, pt, pb), ib) ->
+          NormalCell((pl *' l, pr *' r, pt, pb), ib)
+      | MultiCell(i, j, (pl, pr, pt, pb), ib) ->
+          MultiCell(i, j, (pl *' l, pr *' r, pt, pb), ib)
+      | EmptyCell -> EmptyCell
+
+  let vmargin t b cfmt ctx it =
+    match cfmt ctx it with
+      | NormalCell((pl, pr, pt, pb), ib) ->
+          NormalCell((pl, pr, t, b), ib)
+      | MultiCell(i, j, (pl, pr, pt, pb), ib) ->
+          MultiCell(i, j, (pl, pr, t, b), ib)
+      | EmptyCell -> EmptyCell
+
+  let vmargin-ratio t b cfmt ctx it =
+    match cfmt ctx it with
+      | NormalCell((pl, pr, pt, pb), ib) ->
+          NormalCell((pl, pr, pt *' t, pb *' b), ib)
+      | MultiCell(i, j, (pl, pr, pt, pb), ib) ->
+          MultiCell(i, j, (pl, pr, pt *' t, pb *' b), ib)
       | EmptyCell -> EmptyCell
 
   let phantom cfmt ctx it =
@@ -262,7 +289,10 @@ module EasyTableAlias : sig
   val eq-sp : cellfmt
   val eq-wd : length -> cellfmt
 
-  val mgn : length -> length -> cellfmt -> cellfmt
+  val hmgn : length -> length -> cellfmt -> cellfmt
+  val hmgnr : float -> float -> cellfmt -> cellfmt
+  val vmgn : length -> length -> cellfmt -> cellfmt
+  val vmgnr : float -> float -> cellfmt -> cellfmt
 
   val t : ruleptn
   val b : ruleptn
@@ -288,7 +318,10 @@ end = struct
   let eq-sp = EasyTable.equal-spacing
   let eq-wd = EasyTable.equal-spacing-with-width
 
-  let mgn = EasyTable.margin
+  let hmgn = EasyTable.hmargin
+  let hmgnr = EasyTable.hmargin-ratio
+  let vmgn = EasyTable.vmargin
+  let vmgnr = EasyTable.vmargin-ratio
 
   let t = EasyTable.toprule
   let b = EasyTable.bottomrule

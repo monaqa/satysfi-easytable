@@ -1,6 +1,6 @@
 #!/bin/sh -l
 
-packages=satysfi-enumitem
+packages=satysfi-easytable
 
 eval $(opam env)
 

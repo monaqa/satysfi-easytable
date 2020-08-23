@@ -25,7 +25,7 @@ See [the documentation](doc/easytable.pdf) (Japanese only).
 
 See [the documentation](doc/easytable.pdf) (Japanese only).
 
-### Demo in Gitpod
+## Demo in Gitpod
 
 Try it in [Gitpod](https://gitpod.io)!
 

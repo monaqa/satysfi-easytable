@@ -25,7 +25,7 @@ Easytable は [SATySFi](https://github.com/gfngfn/SATySFi) で簡素な表を組
 
 [easytable パッケージのドキュメント](doc/easytable.pdf) 参照．
 
-### Gitpod
+## Gitpodを使ったデモ
 
 [Gitpod](https://gitpod.io) を使って，easytableパッケージの使用感を試すことができます．
 

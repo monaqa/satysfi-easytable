@@ -24,3 +24,15 @@ See [the documentation](doc/easytable.pdf) (Japanese only).
 ## Examples
 
 See [the documentation](doc/easytable.pdf) (Japanese only).
+
+## Demo in Gitpod
+
+Try it in [Gitpod](https://gitpod.io)!
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/monaqa/satysfi-easytable)
+
+You can freely edit the file `demo/demo.saty` and generate a PDF (`demo/demo.pdf`)
+by executing command `satysfi demo/demo.saty` on the terminal window.
+
+The container is created using [SATySFi's docker image](https://github.com/amutake/satysfi-docker),
+so you can install other packages via `opam` and `satyrographos` command.

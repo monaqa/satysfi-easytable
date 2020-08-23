@@ -1,0 +1,44 @@
+% begin template
+@require: easytable/easytable
+open EasyTableAlias
+
+% essential command
+
+let-inline ctx \math m = script-guard Latin (embed-math ctx m)
+
+let-block ctx +p it = line-break true true ctx (read-inline ctx it ++ inline-fil)
+
+let document bt =
+  let ctx =
+    get-initial-context 440pt (command \math)
+      |> set-dominant-narrow-script Latin
+      |> set-dominant-wide-script Kana
+      |> set-language Kana Japanese
+      |> set-language HanIdeographic Japanese
+      |> set-language Latin English
+      |> set-hyphen-penalty 100
+  in
+  let bb = read-block ctx bt in
+  page-break A4Paper
+    (fun _ -> (| text-origin = (80pt, 100pt); text-height = 630pt; |))
+      (fun _ -> (|
+        header-origin = (0pt, 0pt);
+        header-content = block-nil;
+        footer-origin = (0pt, 0pt);
+        footer-content = block-nil;
+      |))
+        bb
+
+% end
+
+in
+
+document'<%
+  +p{
+    \easytable[l; lw 120pt; lw 120pt;]{
+      | Column 1 | Column 2   | Column 3
+      | 通常の列 | 横幅 120pt
+      | 横幅 120pt で，なおかつ横幅よりも長いテキストが入っている場合
+      |}
+  }
+>%

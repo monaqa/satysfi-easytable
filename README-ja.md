@@ -24,3 +24,14 @@ Easytable は [SATySFi](https://github.com/gfngfn/SATySFi) で簡素な表を組
 ## 具体例
 
 [easytable パッケージのドキュメント](doc/easytable.pdf) 参照．
+
+### Gitpod
+
+[Gitpod](https://gitpod.io) を使って，easytableパッケージの使用感を試すことができます．
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/monaqa/satysfi-easytable)
+
+`demo/demo.saty` を自由に編集し，ターミナル上で `satysfi demo/demo.saty` とすることでPDF (`demo/demo.pdf`) を生成できます．
+[SATySFi の docker image](https://github.com/amutake/satysfi-docker) を使用しているため，
+`opam` / `satyrographos` コマンドで他のパッケージを入れることもできます．
+

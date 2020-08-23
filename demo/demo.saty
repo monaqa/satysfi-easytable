@@ -1,5 +1,5 @@
 % begin template
-@require: esaytable/easytable
+@require: easytable/easytable
 open EasyTableAlias
 
 % essential command

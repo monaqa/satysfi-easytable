@@ -3,6 +3,7 @@
 @require: option
 @require: color
 @import: matrix
+@import: table-builder
 
 % 罫線のパターン．
 type ruleptn = length list -> length list -> graphics list
@@ -47,7 +48,7 @@ module EasyTable: sig
   val row-bgcolor: color -> int -> int -> ruleptn
 
 % commands
-  direct \easytable: [(ruleptn list)?; (cellfmt list); (inline-text list)] inline-cmd
+  direct \easytable: [(ruleptn list)?; ((TableBuilder.builder -> TableBuilder.builder) list)?; (cellfmt list); (inline-text list)] inline-cmd
   direct \list-table: [(ruleptn list)?; (cellfmt list); itemize] inline-cmd
 
 end = struct
@@ -226,26 +227,40 @@ end = struct
 
 % commands
 
-  let-inline ctx \easytable ?:rules-lst-opt cfmtlst it-vector =
-    let cell-converter-lst = cfmtlst |> List.map (fun f -> f ctx) in
-    let phantom-cell-converter-lst = cfmtlst |> List.map phantom |> List.map (fun f -> f ctx) in
-    let it-matrix = Matrix.from-list (List.length cfmtlst) {} it-vector in
-    let cell-matrix = Matrix.colmap (cell-converter-lst) it-matrix in
-    let phantom-cell-matrix = Matrix.colmap (phantom-cell-converter-lst) it-matrix in
+  % old impl
 
-    % 罫線の設定．
+  % let-inline ctx \easytable ?:rules-lst-opt cfmtlst it-vector =
+  %   let cell-converter-lst = cfmtlst |> List.map (fun f -> f ctx) in
+  %   let phantom-cell-converter-lst = cfmtlst |> List.map phantom |> List.map (fun f -> f ctx) in
+  %   let it-matrix = Matrix.from-list (List.length cfmtlst) {} it-vector in
+  %   let cell-matrix = Matrix.colmap (cell-converter-lst) it-matrix in
+  %   let phantom-cell-matrix = Matrix.colmap (phantom-cell-converter-lst) it-matrix in
+  % 
+  %   % 罫線の設定．
+  %   let default-rules-lst = [toprule;bottomrule; midrule 1;] in
+  %   let rules-lst = Option.from default-rules-lst rules-lst-opt in
+  %   let rulef = concat-ruleptn rules-lst in
+  % 
+  %   let ib-rule = tabular (Matrix.to-llist phantom-cell-matrix) rulef in
+  %   let ib-table = tabular (Matrix.to-llist cell-matrix) (fun _ _ -> []) in
+  %   let (w, h, d) = get-natural-metrics ib-table in
+  %   inline-graphics w h d (fun (x, y) -> [
+  %     draw-text (x, y) ib-rule;
+  %     draw-text (x, y) ib-table;
+  %   ])
+
+  let-inline ctx \easytable ?:rules-lst-opt ?:tbconvflst cfmtlst it-vector =
     let default-rules-lst = [toprule;bottomrule; midrule 1;] in
-    let rules-lst = Option.from default-rules-lst rules-lst-opt in
-    let rulef = concat-ruleptn rules-lst in
-
-    let ib-rule = tabular (Matrix.to-llist phantom-cell-matrix) rulef in
-    let ib-table = tabular (Matrix.to-llist cell-matrix) (fun _ _ -> []) in
-    let (w, h, d) = get-natural-metrics ib-table in
-    inline-graphics w h d (fun (x, y) -> [
-      draw-text (x, y) ib-rule;
-      draw-text (x, y) ib-table;
-    ])
-
+    let rules-lst = rules-lst-opt |> Option.from default-rules-lst in
+    let tbconvflst = tbconvflst |> Option.from [] in
+    let tbconvertf = tbconvflst |> List.fold-left (fun a b t -> b (a t)) (fun t -> t) in
+    TableBuilder.(
+    it-vector |> init (cfmtlst |> List.length)
+              |> align-col cfmtlst
+              |> tbconvertf
+              |> set-rules rules-lst
+              |> build ctx
+    )
 
   let itemize-to-it-matrix (Item(_, lst-item)) =
     let itemize-to-it-vector (Item(it, lst-item)) =

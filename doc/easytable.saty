@@ -37,6 +37,8 @@ let-inline ctx \br =
 let-inline ctx \br-skip skip =
   discretionary (- 1000) inline-nil ((inline-graphics 0pt 0pt skip (fun (x, y) -> [])) ++ inline-fil) inline-nil
 
+let dummy ctx it = EmptyCell
+
 in
 
 document (|
@@ -531,6 +533,8 @@ document (|
     }
 
 
+  >%
+
 >%
 
 +section{Easytable パッケージが提供する機能}<%
@@ -707,6 +711,76 @@ document (|
   >%
 
 >%
+
++section{高度な機能} <%
+
+  +p{
+    `\easytable` は easy という単語が付いているものの、複雑な表を組むこともできます。
+    たとえば
+  }
+
+    +example(```
+        \easytable?*?:[TableBuilder.set-fmt-(2, 1) dummy][l;c;r]{
+          | header1    | header2      | header3
+          | align left | align center | align right
+          | a          | b            | c
+          | a          | b            | c
+          |}
+    ```)<%
+      +p{
+        \easytable?*?:[TableBuilder.set-fmt-(2, 1) dummy][l;c;r]{
+          | header1    | header2      | header3
+          | align left | align center | align right
+          | a          | b            | c
+          | a          | b            | c
+          |}
+      }
+    >%
+
+    +example(```
+        \easytable?:[
+          EasyTable.genbgcolor (Color.gray 0.8) (2, 0) (3, 3);
+          EasyTable.genbgcolor (Color.gray 0.9) (4, 1) (8, 2);
+          rect; m 1;
+        ]?:[
+          TableBuilder.concat (2, 0) (2, 2) r;
+          TableBuilder.concat (4, 1) (7, 1) c;
+        ][c;c;c;c]{
+          | hoge | fuga  | piyo | teka
+          | a    | b     | c    | d
+          | concat!           ||| d
+          | a    | b     | c    | d
+          | a    | concat| c    | d
+          | a    |       | c    | d
+          | a    |       | c    | d
+          | a    |       | c    | d
+          |}
+    ```)<%
+      +p{
+        \easytable?:[
+          EasyTable.genbgcolor (Color.gray 0.8) (2, 0) (3, 3);
+          EasyTable.genbgcolor (Color.gray 0.9) (4, 1) (8, 2);
+          rect; m 1;
+        ]?:[
+          TableBuilder.merge (2, 0) (2, 2) r;
+          TableBuilder.merge (4, 1) (7, 1) c;
+        ][c;c;c;c]{
+          | hoge | fuga  | piyo | teka
+          | a    | b     | c    | d
+          | Merged!           ||| d
+          | a    | b     | c    | d
+          | a    | Merged| c    | d
+          | a    |       | c    | d
+          | a    |       | c    | d
+          | a    |       | c    | d
+          |}
+      }
+    >%
+
+
+  +p{
+    “easy” じゃなくなってきましたね！
+  }
 
 >%
 

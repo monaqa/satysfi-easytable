@@ -29,6 +29,7 @@ module TableBuilder : sig
   val from-list : int -> inline-text list -> builder
   val from-itemize : itemize -> builder
   val build : context -> builder -> inline-boxes
+  val build-simple : context -> builder -> inline-boxes
 
 % getter, setter
   val get-fmt : builder -> cellfmt Matrix.t
@@ -119,6 +120,17 @@ end = struct
     let it-matrix = Matrix.from-llist (List.map itemize-to-it-vector lst-item) in
     init it-matrix
 
+  let build-simple ctx self =
+    let ctx-matrix = ctx |> Matrix.tile (self#fmt |> Matrix.shape) in
+    let cell-matrix =
+      let fmt-ctx-matrix = Matrix.eachmap self#fmt ctx-matrix in
+      Matrix.eachmap fmt-ctx-matrix self#text
+    in
+    let rulef = concat-ruleptn self#rules in
+
+    tabular (Matrix.to-llist cell-matrix) rulef
+
+
   let build ctx self =
     let ctx-matrix = ctx |> Matrix.tile (self#fmt |> Matrix.shape) in
 
@@ -145,9 +157,9 @@ end = struct
 
 % getter/setter
 
-  let get-fmt- (i, j) self = self#fmt |> Matrix.get (i, j)
+  let get-fmt- (i, j) self = self#fmt |> Matrix.get (i - 1, j - 1)
   let set-fmt- (i, j) fmt self =
-    let new-fmt = self#fmt |> Matrix.set (i, j) fmt in
+    let new-fmt = self#fmt |> Matrix.set (i - 1, j - 1) fmt in
     (| self with fmt = new-fmt |)
 
   let get-fmt self = self#fmt

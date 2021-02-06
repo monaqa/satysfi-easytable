@@ -1,4 +1,4 @@
-@require: list
+@require: base/list-ext
 @require: gr
 @require: option
 @require: color
@@ -31,6 +31,7 @@ module EasyTable: sig
   val hmargin-ratio : float -> float -> cellfmt -> cellfmt
   val vmargin : length -> length -> cellfmt -> cellfmt
   val vmargin-ratio : float -> float -> cellfmt -> cellfmt
+  val with-ctx: (context -> context) -> cellfmt -> cellfmt
 
 % rule pattern
   val genrule: (point -> point -> graphics list) -> (int * int) -> (int * int) -> ruleptn
@@ -43,6 +44,8 @@ module EasyTable: sig
   val outerframerule: ruleptn
   % val header-col-bg: color -> ruleptn
   val genbgcolor: color -> (int * int) -> (int * int) -> ruleptn
+  val stripe-row: int?-> color -> ruleptn
+  val stripe-col: int?-> color -> ruleptn
   val whole-bgcolor: color -> ruleptn
   val column-bgcolor: color -> int -> int -> ruleptn
   val row-bgcolor: color -> int -> int -> ruleptn
@@ -160,6 +163,8 @@ end = struct
           MultiCell(i, j, pads, phantomf ib)
       | EmptyCell -> EmptyCell
 
+  let with-ctx ctxf cfmt ctx it = let ctx-new = ctxf ctx in cfmt ctx-new it
+
 % rule pattern
 
   % 複数の罫線パターンを結合する．
@@ -229,6 +234,32 @@ end = struct
   let whole-bgcolor clr = genbgcolor clr (0, 0) (-1, -1)
   let column-bgcolor clr j1 j2 = genbgcolor clr (0, j1) (-1, j2)
   let row-bgcolor clr i1 i2 = genbgcolor clr (i1, 0) (i2, -1)
+
+  let range n1 n2 =
+    let-rec aux min max =
+      if min == max then [min] else min :: (aux (min + 1) max)
+    in
+    if n1 < n2 then (aux n1 n2) else (aux n2 n1)
+
+  let stripe-row ?:start-row clr xs ys =
+    let start-row = start-row |> Option.from 0 in
+    let gr row = genbgcolor clr (row, 0) (row + 1, -1) xs ys in
+    let takef idx = idx >= start-row && ( (idx - start-row) mod 2 == 0) in
+
+    (range 0 (List.length ys))
+      |> List.take-while takef
+      |> List.map gr
+      |> List.concat
+
+  let stripe-col ?:start-col clr xs ys =
+    let start-col = start-col |> Option.from 0 in
+    let gr col = genbgcolor clr (0, col) (-1, col + 1) xs ys in
+    let takef idx = idx >= start-col && ( (idx - start-col) mod 2 == 0) in
+
+    (range 0 (List.length xs))
+      |> List.take-while takef
+      |> List.map gr
+      |> List.concat
 
 % commands
 
@@ -308,6 +339,7 @@ module EasyTableAlias : sig
   val hmgnr : float -> float -> cellfmt -> cellfmt
   val vmgn : length -> length -> cellfmt -> cellfmt
   val vmgnr : float -> float -> cellfmt -> cellfmt
+  val with-ctx : (context -> context) -> cellfmt -> cellfmt
 
   % rule pattern
   val t : ruleptn
@@ -320,6 +352,8 @@ module EasyTableAlias : sig
   val bg-a : color -> ruleptn
   val bg-r : color -> int -> int -> ruleptn
   val bg-c : color -> int -> int -> ruleptn
+  val stripe-r : int ?-> color -> ruleptn
+  val stripe-c : int ?-> color -> ruleptn
 
   val rect : ruleptn
 
@@ -343,6 +377,7 @@ end = struct
   let hmgnr = EasyTable.hmargin-ratio
   let vmgn = EasyTable.vmargin
   let vmgnr = EasyTable.vmargin-ratio
+  let with-ctx = EasyTable.with-ctx
 
   let t = EasyTable.toprule
   let b = EasyTable.bottomrule
@@ -356,6 +391,8 @@ end = struct
   let bg-a = EasyTable.whole-bgcolor
   let bg-r = EasyTable.row-bgcolor
   let bg-c = EasyTable.column-bgcolor
+  let stripe-r = EasyTable.stripe-row
+  let stripe-c = EasyTable.stripe-col
 
   let merge = TableBuilder.merge
   let set-fmt- = TableBuilder.set-fmt-

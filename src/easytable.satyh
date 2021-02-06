@@ -163,7 +163,7 @@ end = struct
           MultiCell(i, j, pads, phantomf ib)
       | EmptyCell -> EmptyCell
 
-  let with-ctx ctxf cfmt ctx it = let ctx-new = ctxf ctx in cfmt ctx-new it
+  let with-ctx ctxf cfmt ctx it = cfmt (ctxf ctx) it
 
 % rule pattern
 
@@ -358,9 +358,9 @@ module EasyTableAlias : sig
   val rect : ruleptn
 
   % table-builder converter
-  val merge: cellfmt -> int * int -> int * int -> TableBuilder.builder -> TableBuilder.builder
+  val merge: int * int -> int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
   val set-fmt- : int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
-  val set-fmt-range : cellfmt -> int * int -> int * int -> TableBuilder.builder -> TableBuilder.builder
+  val set-fmt-range : int * int -> int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
 
 end = struct
 

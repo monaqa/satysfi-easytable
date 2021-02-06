@@ -51,17 +51,17 @@ module TableBuilder : sig
 
   % builder |> merge fmt (rsize, csize) (rinit, cinit)
   % 指定した範囲のセルを結合し、 fmt で整列する。
-  % fmt (cellfmt): 結合後のフォーマット。
-  % (rsize, csize) (int * int): 結合するセルの大きさ。横2行、縦3列なら (2, 3)。
   % (rinit, cinit) (int * int): 結合するセルの左上端の位置。1始まり。
-  val merge : cellfmt -> int * int -> int * int -> builder -> builder
+  % (rsize, csize) (int * int): 結合するセルの大きさ。横2行、縦3列なら (2, 3)。
+  % fmt (cellfmt): 結合後のフォーマット。
+  val merge : int * int -> int * int -> cellfmt -> builder -> builder
 
   % builder |> set-fmt-range fmt (rsize, csize) (rinit, cinit)
   % 指定した範囲のセルの書式設定を fmt に変更する。
   % fmt (cellfmt): 結合後のフォーマット。
   % (rsize, csize) (int * int): 変更するセルの行数・列数。横2行、縦3列なら (2, 3)。
   % (rinit, cinit) (int * int): 変更するセルの左上端の位置。1始まり。
-  val set-fmt-range : cellfmt -> int * int -> int * int -> builder -> builder
+  val set-fmt-range : int * int -> int * int -> cellfmt -> builder -> builder
 
 end = struct
 
@@ -190,7 +190,7 @@ end = struct
     let fmtmat = fmtlst |> Matrix.copy-col col in
     set-fmt fmtmat self
 
-  let merge fmt (row-size, col-size) (rinit1, cinit1) self =
+  let merge (rinit1, cinit1) (row-size, col-size) fmt self =
     let rinit = rinit1 - 1 in
     let cinit = cinit1 - 1 in
     let multicell-fmt ctx it =
@@ -206,7 +206,7 @@ end = struct
     in
     set-fmt fmtmat self
 
-  let set-fmt-range fmt (row-size, col-size) (rinit1, cinit1) self =
+  let set-fmt-range (rinit1, cinit1) (row-size, col-size) fmt self =
     let rinit = rinit1 - 1 in
     let cinit = cinit1 - 1 in
     let fmttile = fmt |> Matrix.tile (row-size, col-size) in

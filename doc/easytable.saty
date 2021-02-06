@@ -431,6 +431,90 @@ document (|
 
   >%
 
+  +subsection{複雑な表の作成}<%
+
+    +p{
+      今までの例で挙げた表組みには以下の共通点があります。
+      \listing{
+        * 左揃え，中央揃えなどのセルの整列条件は列ごとに定まっており、
+          同一列の中で揃え方が異なることはない。
+        * セルの結合がない。
+      }%
+      % これは easytable パッケージが「単純な表を簡単な構文によって組む」という思想のもと設計されているためです。
+      実際、上で挙げた機能が無くとも多くの表を組むことができます。
+      しかし、中にはセルの結合や特定箇所の書式変更を必要とするような、
+      複雑な表を組みたい場合もあるでしょう。
+      easytable は、そのような複雑な表にも対応しています。
+    }
+
+    +p{
+      上で示したような複雑な構造を持つ表を作成するには、
+      `\easytable` コマンドの2番目のオプション引数を用います。
+    }
+
+    +example(```
+        \easytable?:[
+          t; b; m 2; m 4;
+          m ?:(1, 3) 1; m ?:(3, 5) 1;
+        ]?:[
+          set-fmt-(4, 1) r;       % (4, 1) 番目のセルの書式を右揃えに変更
+          merge (1, 2) (1, 2) c;  % (1, 2) 番目のセルから1行2列を結合
+          merge (1, 4) (1, 2) c;  % (1, 4) 番目のセルから1行2列を結合
+          merge (5, 2) (2, 2) c;  % (5, 2) 番目のセルから2行2列を結合
+          merge (5, 5) (2, 1) r;  % (5, 5) 番目のセルから2行1列を結合（右揃え）
+        ] [l; c; c; r; r] {
+          | Program | Answer         || Time [ms]      |
+          |         | case A | case B | case A | case B
+          | foldn   | Yes    | Yes    | ${4}   | ${16}
+          | mc91    | No     | –      | ${24}  | –
+          | rev     | Yes    | Yes    | ${4}   | ${78}
+          | max     |        |        | ${8}   |
+          |}
+    ```)<%
+      +p{
+        \easytable?:[
+          t; b; m 2; m 4;
+          m ?:(1, 3) 1; m ?:(3, 5) 1;
+        ]?:[
+          set-fmt-(4, 1) r;       % (4, 1) 番目のセルの書式を右揃えに変更
+          merge (1, 2) (1, 2) c;  % (1, 2) 番目のセルから1行2列を結合
+          merge (1, 4) (1, 2) c;  % (1, 4) 番目のセルから1行2列を結合
+          merge (5, 2) (2, 2) c;  % (5, 2) 番目のセルから2行2列を結合
+          merge (5, 5) (2, 1) r;  % (5, 5) 番目のセルから2行1列を結合（右揃え）
+        ] [l; c; c; r; r] {
+          | Program | Answer         || Time [ms]      |
+          |         | case A | case B | case A | case B
+          | foldn   | Yes    | Yes    | ${4}   | ${16}
+          | mc91    | No     | –      | ${24}  | –
+          | rev     | Yes    |        | ${4}   | ${78}
+          | max     |        |        | ${8}   |
+          |}
+      }
+    >%
+
+    +p{
+      引数がだいぶややこしくなってきました。
+      上の例では、`\easytable` コマンドに `?:` から始まる2つのオプション引数を渡しています。
+      `?:[t; b; ...]` という箇所は1番目のオプション引数であり、
+      前の節で紹介したように罫線を指定します。
+      その次の `?:[set-fmt-(4, 1) r; ...]` という箇所は
+      「セルの書式設定をデフォルトから変更する」ための設定を並べたものです。
+    }
+    +p{
+      `set-fmt- (r, c) fmt` という関数を使うと、 `r` 行 `c` 列のセルの書式を `fmt` へと変更することができます。
+      上の例では 4行目の1列目にある `mc91` というテキストに `r` 形式を指定することで、
+      本来は左揃えで表示されるはずのセルが右揃えで表示されています。
+    }
+    +p{
+      `merge (rinit, cinit) (rsize, csize) fmt` という関数を使うと、
+      `rinit` 行 `cinit` 列のセルから右下方向に数えて `rsize` 行、 `csize` 列の数だけのセルを結合し、
+      `fmt` 書式で表示します。
+      上の例の `merge (5, 2) (2, 2) c` では、5行目の2列目にある `Yes` と書かれたセルが
+      2行2列へと拡張され、さらに中央揃えにして表示されています。
+    }
+
+  >%
+
   +subsection{その他の機能}<%
     +p{
       長い文章を入れたい場合などは，
@@ -488,8 +572,9 @@ document (|
     +example(```
       +p{
         \easytable?:[t; b; m 1; v 2]
+        ?:[ merge (1, 1) (1, 2) c ]
         [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; e]{
-          | 月/|日 | 2020 年 の 祝 日
+          | 日付  || 2020 年 の 祝 日
           |  1/|1  | 元 日
           |  1/|13 | 成 人 の 日
           |  2/|11 | 建 国 記 念 の 日
@@ -502,8 +587,9 @@ document (|
     ```)<%
       +p{
         \easytable?:[t; b; m 1; v 2]
+        ?:[ merge (1, 1) (1, 2) c ]
         [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; eq-sp]{
-          | 月/|日 | 2020 年 の 祝 日
+          | 日付  || 2020 年 の 祝 日
           |  1/|1  | 元 日
           |  1/|13 | 成 人 の 日
           |  2/|11 | 建 国 記 念 の 日
@@ -531,7 +617,6 @@ document (|
       現に「（中略）」と書かれたセルは均等割り付けの列にあるにもかかわらず，
       余白は挟まっていません．
     }
-
 
   >%
 
@@ -709,78 +794,6 @@ document (|
     }
 
   >%
-
->%
-
-+section{高度な機能} <%
-
-  +p{
-    `\easytable` は easy という単語が付いているものの、複雑な表を組むこともできます。
-    たとえば
-  }
-
-    +example(```
-        \easytable?*?:[TableBuilder.set-fmt-(2, 1) dummy][l;c;r]{
-          | header1    | header2      | header3
-          | align left | align center | align right
-          | a          | b            | c
-          | a          | b            | c
-          |}
-    ```)<%
-      +p{
-        \easytable?*?:[TableBuilder.set-fmt-(2, 1) dummy][l;c;r]{
-          | header1    | header2      | header3
-          | align left | align center | align right
-          | a          | b            | c
-          | a          | b            | c
-          |}
-      }
-    >%
-
-    +example(```
-        \easytable?:[
-          EasyTable.genbgcolor (Color.gray 0.8) (2, 0) (3, 3);
-          EasyTable.genbgcolor (Color.gray 0.9) (4, 1) (8, 2);
-          rect; m 1;
-        ]?:[
-          TableBuilder.concat (2, 0) (2, 2) r;
-          TableBuilder.concat (4, 1) (7, 1) c;
-        ][c;c;c;c]{
-          | hoge | fuga  | piyo | teka
-          | a    | b     | c    | d
-          | concat!           ||| d
-          | a    | b     | c    | d
-          | a    | concat| c    | d
-          | a    |       | c    | d
-          | a    |       | c    | d
-          | a    |       | c    | d
-          |}
-    ```)<%
-      +p{
-        \easytable?:[
-          EasyTable.genbgcolor (Color.gray 0.8) (2, 0) (3, 3);
-          EasyTable.genbgcolor (Color.gray 0.9) (4, 1) (8, 2);
-          rect; m 1;
-        ]?:[
-          TableBuilder.merge (2, 0) (2, 2) r;
-          TableBuilder.merge (4, 1) (7, 1) c;
-        ][c;c;c;c]{
-          | hoge | fuga  | piyo | teka
-          | a    | b     | c    | d
-          | Merged!           ||| d
-          | a    | b     | c    | d
-          | a    | Merged| c    | d
-          | a    |       | c    | d
-          | a    |       | c    | d
-          | a    |       | c    | d
-          |}
-      }
-    >%
-
-
-  +p{
-    “easy” じゃなくなってきましたね！
-  }
 
 >%
 

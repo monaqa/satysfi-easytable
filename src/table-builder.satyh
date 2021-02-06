@@ -25,7 +25,9 @@ module TableBuilder : sig
   type builder
 
 % builder pattern. builder の初期化とビルド
-  val init : int -> inline-text list -> builder
+  val init : inline-text Matrix.t -> builder
+  val from-list : int -> inline-text list -> builder
+  val from-itemize : itemize -> builder
   val build : context -> builder -> inline-boxes
 
 % getter, setter
@@ -45,8 +47,20 @@ module TableBuilder : sig
 % 高度な編集
   val align-col : cellfmt list -> builder -> builder
   val align-row : cellfmt list -> builder -> builder
-  val merge : int * int -> int * int -> cellfmt -> builder -> builder
 
+  % builder |> merge fmt (rsize, csize) (rinit, cinit)
+  % 指定した範囲のセルを結合し、 fmt で整列する。
+  % fmt (cellfmt): 結合後のフォーマット。
+  % (rsize, csize) (int * int): 結合するセルの大きさ。横2行、縦3列なら (2, 3)。
+  % (rinit, cinit) (int * int): 結合するセルの左上端の位置。1始まり。
+  val merge : cellfmt -> int * int -> int * int -> builder -> builder
+
+  % builder |> set-fmt-range fmt (rsize, csize) (rinit, cinit)
+  % 指定した範囲のセルの書式設定を fmt に変更する。
+  % fmt (cellfmt): 結合後のフォーマット。
+  % (rsize, csize) (int * int): 変更するセルの行数・列数。横2行、縦3列なら (2, 3)。
+  % (rinit, cinit) (int * int): 変更するセルの左上端の位置。1始まり。
+  val set-fmt-range : cellfmt -> int * int -> int * int -> builder -> builder
 
 end = struct
 
@@ -84,14 +98,26 @@ end = struct
 
 % builder pattern
 
-  let init n-col textlst =
-    let it-matrix = Matrix.from-list n-col {} textlst in
-    let fmt = default-cellfmt |> Matrix.tile (it-matrix |> Matrix.shape) in
+  let init mat =
+    let fmt = default-cellfmt |> Matrix.tile (mat |> Matrix.shape) in
     (|
       fmt = fmt;
-      text = it-matrix;
+      text = mat;
       rules = [];
     |)
+
+  let from-list n-col textlst =
+    let it-matrix = Matrix.from-list n-col {} textlst in
+    init it-matrix
+
+  let from-itemize (Item(_, lst-item)) =
+    let itemize-to-it-vector (Item(it, lst-item)) =
+      let extract-it-from-item (Item(it-inner, _)) = it-inner in
+      let inner-items = List.map extract-it-from-item lst-item in
+      inner-items
+    in
+    let it-matrix = Matrix.from-llist (List.map itemize-to-it-vector lst-item) in
+    init it-matrix
 
   let build ctx self =
     let ctx-matrix = ctx |> Matrix.tile (self#fmt |> Matrix.shape) in
@@ -152,19 +178,28 @@ end = struct
     let fmtmat = fmtlst |> Matrix.copy-col col in
     set-fmt fmtmat self
 
-  let merge (r1, c1) (r2, c2) fmt self =
-    let row-dist = r2 - r1 + 1 in
-    let col-dist = c2 - c1 + 1 in
+  let merge fmt (row-size, col-size) (rinit1, cinit1) self =
+    let rinit = rinit1 - 1 in
+    let cinit = cinit1 - 1 in
     let multicell-fmt ctx it =
       match fmt ctx it with
-      | NormalCell(pads, ib) -> MultiCell(row-dist, col-dist, pads, ib)
+      | NormalCell(pads, ib) -> MultiCell(row-size, col-size, pads, ib)
       | MultiCell(i, j, pads, ib) -> MultiCell(i, j, pads, ib)
       | EmptyCell -> EmptyCell
     in
-    let emptyfmtmat = empty-cellfmt |> Matrix.tile (row-dist, col-dist) in
+    let emptyfmtmat = empty-cellfmt |> Matrix.tile (row-size, col-size) in
     let fmtmat =
-      self#fmt |> Matrix.embed (r1, c1) emptyfmtmat
-               |> Matrix.set (r1, c1) multicell-fmt
+      self#fmt |> Matrix.embed (rinit, cinit) emptyfmtmat
+               |> Matrix.set (rinit, cinit) multicell-fmt
+    in
+    set-fmt fmtmat self
+
+  let set-fmt-range fmt (row-size, col-size) (rinit1, cinit1) self =
+    let rinit = rinit1 - 1 in
+    let cinit = cinit1 - 1 in
+    let fmttile = fmt |> Matrix.tile (row-size, col-size) in
+    let fmtmat =
+      self#fmt |> Matrix.embed (rinit, cinit) fmttile
     in
     set-fmt fmtmat self
 

@@ -361,6 +361,7 @@ module EasyTableAlias : sig
   val merge: int * int -> int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
   val set-fmt- : int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
   val set-fmt-range : int * int -> int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
+  val convert-text-range : int * int -> int * int -> (inline-text -> inline-text) -> TableBuilder.builder -> TableBuilder.builder
 
 end = struct
 
@@ -397,5 +398,6 @@ end = struct
   let merge = TableBuilder.merge
   let set-fmt- = TableBuilder.set-fmt-
   let set-fmt-range = TableBuilder.set-fmt-range
+  let convert-text-range = TableBuilder.convert-text-range
 
 end

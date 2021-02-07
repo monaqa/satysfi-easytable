@@ -34,10 +34,10 @@ let-block +example str bt =
 let-block +desc item = '<
   +gendescription(|
     nextline = true;
-    title-inner-gap = 0pt;
+    title-inner-gap = 10pt;
     inner-indent = (fun title-wid -> 20pt);
-    % title-func = (fun ctx it -> read-inline ctx {\emph{#it;}});
-    title-func = read-inline;
+    title-func = (fun ctx it -> read-inline ctx {\emph{#it;}});
+    % title-func = read-inline;
   |)(item);
 >
 
@@ -47,7 +47,12 @@ let-inline ctx \br =
 let-inline ctx \br-skip skip =
   discretionary (- 1000) inline-nil ((inline-graphics 0pt 0pt skip (fun (x, y) -> [])) ++ inline-fil) inline-nil
 
-let dummy ctx it = EmptyCell
+let-inline ctx \strong inner =
+  let ctx-strong =
+    ctx |> set-font Latin StdJaBook.font-latin-italic
+        |> StdJaBook.set-cjk-font StdJaBook.font-cjk-gothic
+  in
+    read-inline ctx-strong inner
 
 in
 
@@ -62,20 +67,11 @@ document (|
 +section{Easytable パッケージの概要}<%
 
   +p{
-    Easytable は、 \SATySFi; 上で楽に表を組むためのパッケージです。
+    Easytable は、 \SATySFi; で汎用的な表を楽に組めるようにするためのものです。
     \SATySFi; には既に表を組むためのパッケージがいくつか標準で用意されていますが、
     いずれも単純な表を描くには少々複雑な構文を要求されるものでした。
-    本パッケージは、単純であるもののある程度の汎用性を備えた、そんな表を楽に組めるようにするためのものです。
-    対象を「ある程度単純な表」に絞っていることからも察される通り、
-    本パッケージで組める表には以下の制約があります。
-    \listing{
-      * 左揃え、中央揃えなどの条件は列ごとに設定することができるが。セル単位で変更することはできない。
-        すなわち、同一列の中で揃え方を変更することはできない。
-      * MultiCell（複数の行または列にわたるセル）は使えない。
-    }%
-    しかし、世の中で必要とされる表の多くはこれらの機能を使わずに組むことができます。
-    本パッケージはユーザが設定しなければならないパラメータを最小限に抑えることで、
-    よりシンプルで組みやすいコマンドを実現しています。
+    本パッケージのコマンドでは、ユーザが設定しなければならない必須引数を最小限に抑え、
+    よりシンプルで組みやすいインターフェースを実現しています。
 
   }
 >%
@@ -472,6 +468,7 @@ document (|
           merge (1, 4) (1, 2) c;  % (1, 4) 番目のセルから1行2列を結合
           merge (5, 2) (2, 2) c;  % (5, 2) 番目のセルから2行2列を結合
           merge (5, 5) (2, 1) r;  % (5, 5) 番目のセルから2行1列を結合（右揃え）
+          convert-text-range (1, 1) (6, 1) (fun it -> {\strong{#it;}});
         ] [l; c; c; r; r] {
           | Program | Answer         || Time [ms]      |
           |         | case A | case B | case A | case B
@@ -491,6 +488,8 @@ document (|
           merge (1, 4) (1, 2) c;  % (1, 4) 番目のセルから1行2列を結合
           merge (5, 2) (2, 2) c;  % (5, 2) 番目のセルから2行2列を結合
           merge (5, 5) (2, 1) r;  % (5, 5) 番目のセルから2行1列を結合（右揃え）
+          % merge (1, 1) (2, 1) l;  % (1, 1) 番目のセルから2行1列を結合（左揃え）
+          convert-text-range (1, 1) (6, 1) (fun it -> {\strong{#it;}});
         ] [l; c; c; r; r] {
           | Program | Answer         || Time [ms]      |
           |         | case A | case B | case A | case B
@@ -511,16 +510,24 @@ document (|
       「セルの書式設定をデフォルトから変更する」ための設定を並べたものです。
     }
     +p{
-      `set-fmt- (r, c) fmt` という関数を使うと、 `r` 行 `c` 列のセルの書式を `fmt` へと変更することができます。
+      `set-fmt- (r, c) fmt` という関数を指定すると、 `r` 行 `c` 列のセルの書式を `fmt` へと変更することができます。
       上の例では 4行目の1列目にある `mc91` というテキストに `r` 形式を指定することで、
       本来は左揃えで表示されるはずのセルが右揃えで表示されています。
     }
     +p{
-      `merge (rinit, cinit) (rsize, csize) fmt` という関数を使うと、
+      `merge (rinit, cinit) (rsize, csize) fmt` という関数を指定すると、
       `rinit` 行 `cinit` 列のセルから右下方向に数えて `rsize` 行、 `csize` 列の数だけのセルを結合し、
-      `fmt` 書式で表示します。
+      `fmt` 書式で表示することができます。
       上の例の `merge (5, 2) (2, 2) c` では、5行目の2列目にある `Yes` と書かれたセルが
       2行2列へと拡張され、さらに中央揃えにして表示されています。
+    }
+    +p{
+      `convert-text-range (rinit, cinit) (rsize, csize) fmt` という関数を指定すると、
+      `rinit` 行 `cinit` 列のセルから右下方向に数えて `rsize` 行、 `csize` 列の数だけのセルのテキストを
+      まとめて変換することができます。
+      上の例では、\strong{Program} の列にあるセルがまとめて選択され、
+      `(fun it -> {\strong{#it;}})` という変換が一括で行われた結果、
+      該当するセルがすべて強調表示されています。
     }
 
   >%
@@ -640,28 +647,38 @@ document (|
       `ruleptn` 及び `cellfmt` 型の説明は後述します。
     }
 
-    +listing{
-      * `\easytable?:[rule-pattern][cell-format]{| contents |}`\br;
+    +desc{
+      * `\easytable?:[rule-pattern]?:[cell-convert][cell-format]{| contents |}`
 
-        `{| contents |}` の内容を表にします。\br-skip(8pt);
+        ** `{| contents |}` の内容を表にします。
 
-        \easytable[l;l;l;l;]{
+        ** \easytable[l; lw 120pt; l; lw 85pt;]{
           | 引数 | 型 | 種類 | 内容
-          | `rule-pattern` | `ruleptn list`     | Optional | 罫線の設定
-          | `cell-format`  | `cellfmt list`     | Needed   | ${n}番目の列の体裁（揃え方）
-          | `contents`     | `inline-text list` | Needed   | 表の中身
+          | `rule-pattern` | `ruleptn list`
+          | Optional | 罫線の設定
+          | `cell-convert` | `(builder -> builder) list`
+          | Optional   | セルの書式設定の変更内容
+          | `cell-format`  | `cellfmt list`
+          | Needed   | ${n}番目の列の体裁（揃え方）
+          | `contents`     | `inline-text list`
+          | Needed   | 表の中身
           |}
 
-      * `\list-table?:[rule-pattern][cell-format]{* contents }`\br;
+      * `\list-table?:[rule-pattern][cell-format]{* contents }`
 
-      `{* contents }` の内容を表にします。\br-skip(8pt);
+        ** `{* contents }` の内容を表にします。
 
-      \easytable[l;l;l;l;]{
-        | 引数 | 型 | 種類 | 内容
-        | `rule-pattern` | `ruleptn list` | Optional | 罫線の設定
-        | `cell-format`  | `cellfmt list` | Needed   | ${n}番目の列の体裁（揃え方）
-        | `contents`     | `itemize`      | Needed   | 表の中身
-        |}
+        ** \easytable[l; lw 120pt; l; lw 85pt;]{
+          | 引数 | 型 | 種類 | 内容
+          | `rule-pattern` | `ruleptn list`
+          | Optional | 罫線の設定
+          | `cell-convert` | `(builder -> builder) list`
+          | Optional   | セルの書式設定の変更内容
+          | `cell-format`  | `cellfmt list`
+          | Needed   | ${n}番目の列の体裁（揃え方）
+          | `contents`     | `itemize`
+          | Needed   | 表の中身
+          |}
 
       }
 
@@ -687,38 +704,38 @@ document (|
       あたかも \LaTeX; の tabular 環境のように簡便に書式を指定できる仕組みとなっています。
     }
 
-    +listing{
-      * `EasyTable.align-left` (alias: `EasyTableAlias.l`)\br;%
-        `cellfmt` 型。入力されたテキストをそのまま組み、左揃えにして表示します。
-      * `EasyTable.align-center` (alias: `EasyTableAlias.c`)\br;%
-        `cellfmt` 型。入力されたテキストをそのまま組み、中央揃えにして表示します。
-      * `EasyTable.align-right` (alias: `EasyTableAlias.r`)\br;%
-        `cellfmt` 型。入力されたテキストをそのまま組み、右揃えにして表示します。
-      * `EasyTable.align-left-with-width` (alias: `EasyTableAlias.lw`)\br;%
-        `length -> cellfmt` 型。
+    +desc{
+      * `EasyTable.align-left` (alias: `EasyTableAlias.l`)
+        ** `cellfmt` 型。入力されたテキストをそのまま組み、左揃えにして表示します。
+      * `EasyTable.align-center` (alias: `EasyTableAlias.c`)
+        ** `cellfmt` 型。入力されたテキストをそのまま組み、中央揃えにして表示します。
+      * `EasyTable.align-right` (alias: `EasyTableAlias.r`)
+        ** `cellfmt` 型。入力されたテキストをそのまま組み、右揃えにして表示します。
+      * `EasyTable.align-left-with-width` (alias: `EasyTableAlias.lw`)
+        ** `length -> cellfmt` 型。
         入力されたテキストをそのまま組み、
         得られた横幅が指定した長さより短ければそのまま左揃えにして表示し、
         長ければ行を折り返します。
-        \SATySFi; の行分割アルゴリズムを使用しているため、
+        ** \SATySFi; の行分割アルゴリズムを使用しているため、
         コストの関係で折り返しが最適解と判断されなければ、
         折り返されない場合もあります。
-      * `EasyTable.align-center-with-width` (alias: `EasyTableAlias.cw`)\br;%
-        `length -> cellfmt` 型。
+      * `EasyTable.align-center-with-width` (alias: `EasyTableAlias.cw`)
+        ** `length -> cellfmt` 型。
         入力されたテキストをそのまま組み、
         得られた横幅が指定した長さより短ければそのまま中央揃えにして表示し、
         長ければ行を折り返します。
-      * `EasyTable.align-right-with-width` (alias: `EasyTableAlias.rw`)\br;%
-        `length -> cellfmt` 型。
+      * `EasyTable.align-right-with-width` (alias: `EasyTableAlias.rw`)
+        ** `length -> cellfmt` 型。
         入力されたテキストをそのまま組み、
         得られた横幅が指定した長さより短ければそのまま右揃えにして表示し、
         長ければ行を折り返します。
-      * `EasyTable.equal-spacing` (alias: `EasyTableAlias.eq-sp`)\br;%
-        `cellfmt` 型。
+      * `EasyTable.equal-spacing` (alias: `EasyTableAlias.eq-sp`)
+        ** `cellfmt` 型。
         入力されたテキストを均等割り付けにします。
         単語間空白の伸長方向のペナルティを極端に下げるという単純な実装のため、
         インラインテキストの時点で半角空白などの空白がないものには恐らく効果がありません。
-      * `EasyTable.equal-spacing-with-width` (alias: `EasyTableAlias.eq-wd`)\br;%
-        `length -> cellfmt` 型。
+      * `EasyTable.equal-spacing-with-width` (alias: `EasyTableAlias.eq-wd`)
+        ** `length -> cellfmt` 型。
         横幅を指定して、入力されたテキストを均等割り付けにします。
     }
 
@@ -726,28 +743,28 @@ document (|
       さらに、 `cellfmt` 型の値を変換するための以下の関数を用意しています。
     }
 
-    +listing{
-      * `EasyTable.hmargin` (alias: `EasyTableAlias.hmgn`)\br;%
-        `length -> length -> cellfmt -> cellfmt` 型。
+    +desc{
+      * `EasyTable.hmargin` (alias: `EasyTableAlias.hmgn`)
+        ** `length -> length -> cellfmt -> cellfmt` 型。
         `cfmt |> EasyTable.hmargin len1 len2` とすることで、
         `cfmt` の書式のマージンを左側が `len1`、右側が`len2`となるように変更します。
         なお、特に `EasyTable.hmargin` を用いなかったときに定まる
         デフォルトのマージンは左右ともにフォントサイズの0.5倍です。
 
-      * `EasyTable.hmargin-ratio` (alias: `EasyTableAlias.hmgnr`)\br;%
-        `float -> float -> cellfmt -> cellfmt` 型。
+      * `EasyTable.hmargin-ratio` (alias: `EasyTableAlias.hmgnr`)
+        ** `float -> float -> cellfmt -> cellfmt` 型。
         `cfmt |> EasyTable.hmargin-ratio r1 r2` とすることで、
         `cfmt` の書式のマージンを左側が元の `r1`倍、右側が`r2` 倍となるように変更します。
 
-      * `EasyTable.vmargin` (alias: `EasyTableAlias.vmgn`)\br;%
-        `length -> length -> cellfmt -> cellfmt` 型。
+      * `EasyTable.vmargin` (alias: `EasyTableAlias.vmgn`)
+        ** `length -> length -> cellfmt -> cellfmt` 型。
         `cfmt |> EasyTable.vmargin len1 len2` とすることで、
         `cfmt` の書式のマージンを上が `len1`、下が`len2`となるように変更します。
         なお、特に `EasyTable.vmargin` を用いなかったときに定まる
         デフォルトのマージンは上下ともにフォントサイズの0.4倍です。
 
-      * `EasyTable.vmargin-ratio` (alias: `EasyTableAlias.vmgnr`)\br;%
-        `float -> float -> cellfmt -> cellfmt` 型。
+      * `EasyTable.vmargin-ratio` (alias: `EasyTableAlias.vmgnr`)
+        ** `float -> float -> cellfmt -> cellfmt` 型。
         `cfmt |> EasyTable.vmargin-ratio r1 r2` とすることで、
         `cfmt` の書式のマージンを上が元の `r1`倍、下が`r2`倍となるように変更します。
     }
@@ -766,52 +783,102 @@ document (|
       こちらもやはり自分で定義した関数を指定できますが、主要なものは予め用意されています。
     }
 
-    +listing{
-      * `EasyTable.toprule` (alias: `EasyTableAlias.t`)\br;%
-        `ruleptn`型。表の一番上に太い黒線を引きます。
-      * `EasyTable.bottomrule` (alias: `EasyTableAlias.b`)\br;%
-        `ruleptn`型。表の一番下に太い黒線を引きます。
-      * `EasyTable.vertrule` (alias: `EasyTableAlias.v`)\br;%
-        `int -> ruleptn`型。 `vertrule n` とすると、
+    +desc{
+      * `EasyTable.toprule` (alias: `EasyTableAlias.t`)
+        ** `ruleptn`型。表の一番上に太い黒線を引きます。
+      * `EasyTable.bottomrule` (alias: `EasyTableAlias.b`)
+        ** `ruleptn`型。表の一番下に太い黒線を引きます。
+      * `EasyTable.vertrule` (alias: `EasyTableAlias.v`)
+        ** `int -> ruleptn`型。 `vertrule n` とすると、
         左から数えて ${n} 番目のインデックスを持つところに細い黒の鉛直線を引きます。
-      * `EasyTable.horizrule` (alias: `EasyTableAlias.h`)\br;%
-        `int -> ruleptn`型。 `horzrule n` とすると、
+      * `EasyTable.horizrule` (alias: `EasyTableAlias.h`)
+        ** `int -> ruleptn`型。 `horzrule n` とすると、
         上から数えて ${n} 番目のインデックスを持つところに細い黒の水平線を引きます。
-      * `EasyTable.midrule` (alias: `EasyTableAlias.m`)\br;%
-        `int -> ruleptn`型。`horzrule` と似ていますが、こちらは両端が少し短くなります。
-      * `EasyTable.diagrule` (alias: `EasyTableAlias.d`)\br;%
-        `(int * int) -> (int * int) -> ruleptn`型。
+      * `EasyTable.midrule` (alias: `EasyTableAlias.m`)
+        ** `int -> ruleptn`型。`horzrule` と似ていますが、こちらは両端が少し短くなります。
+      * `EasyTable.diagrule` (alias: `EasyTableAlias.d`)
+        ** `(int * int) -> (int * int) -> ruleptn`型。
         `diagrule (i1, j1) (i2, j2)` とすると、
         右上から数えて `(i1, j1)` 番目にある格子点から
         `(i2, j2)` 番目にある格子点にかけて細い黒の直線を引きます。
-      * `EasyTable.outerframerule` (alias: `EasyTableAlias.rect`)\br;%
-        `ruleptn`型。表に太い黒の外枠を付けます。
+      * `EasyTable.outerframerule` (alias: `EasyTableAlias.rect`)
+        ** `ruleptn`型。表に太い黒の外枠を付けます。
     }
 
     +p{
       罫線だけでなく、表の背景色も指定できます。
     }
 
-    +listing{
-      * `EasyTable.whole-bgcolor` (alias: `EasyTableAlias.bg-a`)\br;%
-        `color -> ruleptn`型。表全体の背景色を指定した色に設定します。
-      * `EasyTable.column-bgcolor` (alias: `EasyTableAlias.bg-c`)\br;%
-        `color -> int -> int -> ruleptn`型。
+    +desc{
+      * `EasyTable.whole-bgcolor` (alias: `EasyTableAlias.bg-a`)
+        ** `color -> ruleptn`型。表全体の背景色を指定した色に設定します。
+      * `EasyTable.column-bgcolor` (alias: `EasyTableAlias.bg-c`)
+        ** `color -> int -> int -> ruleptn`型。
         `column-bgcolor clr n m` で、`n` 番目から `m` 番目にかけての列を指定した色で塗り潰します。
-      * `EasyTable.row-bgcolor` (alias: `EasyTableAlias.bg-r`)\br;%
-        `color -> int -> int -> ruleptn`型。
+      * `EasyTable.row-bgcolor` (alias: `EasyTableAlias.bg-r`)
+        ** `color -> int -> int -> ruleptn`型。
         `row-bgcolor clr n m` で、`n` 番目から `m` 番目にかけての行を指定した色で塗り潰します。
     }
 
   >%
 
-  +subsection{セルの結合・セル単位での書式設定}<%
+  +subsection{セル単位での書式設定}<%
+
+    +p{
+      `\easytable` コマンドの2番目のオプション引数では、
+      `(builder -> builder) list` 型の値を指定することで
+      特定のセルの書式を変更したり、セルを結合したりといった操作ができるようになります。
+      `builder` は正確には `TableBuilder.builder` という型であり、
+      表を組むときの cellfmt や ruleptn を保持したデータ構造です。
+      `TableBuilder` モジュールのメソッドを用いて `cellfmt` 等の中身を「強制的に組み替える」ことで、
+      表に関するおよそあらゆる類の編集を可能にします。
+      このように、2番目のオプション引数は自由度の高さという意味では最も強力であるものの、
+      指定方法が複雑であり多用しすぎるとコードの可読性を損ねるおそれがあります。
+      必須引数の範囲で可能な限りレイアウトを指定し、
+      セルの結合などどうしても必要な箇所だけこのオプションで微調整する、という使い方をお勧めします。
+    }
 
     +desc{
       * `TableBuilder.merge` (alias: `EasyTableAlias.merge`)
 
-        ** `int * int -> int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder` 型。
-           セルを結合します。
+        ** `int * int -> int * int -> cellfmt -> builder -> builder` 型。
+        ** `merge (rs, cs) (re, ce) fmt` で、
+           `rs` 行 `cs` 列目にあるセルから右に `re` 個、下に `ce` 個数えたところまでのセルをまとめて結合します。
+           結合後のテキストは最も左上のセル、すなわちの`rs` 行 `cs` 列目にあるセルの中身が引き継がれ、
+           それ以外のセルに格納されていたテキストは全て無視されます\footnote{
+             可読性を可能な限り損ねないよう、それ以外のセルには空白や空行のみを入れたほうが良いでしょう。
+           }。
+           結合後のセルの書式には `fmt` で指定したものが使用されます。
+
+      * `TableBuilder.set-fmt-` (alias: `EasyTableAlias.set-fmt-`)
+
+        ** `int * int -> cellfmt -> builder -> builder` 型。
+
+        ** `set-fmt- (r, c) fmt` で、 `r` 行 `c` 列目にあるセルの書式を `fmt` に変更します。
+           特定のセルのみ書式を変更したい場合に便利です。
+           複数のセルの書式を塊で変更したい場合は後述の `set-fmt-range` を用いることができます。
+
+      * `TableBuilder.set-fmt-range` (alias: `EasyTableAlias.set-fmt-range`)
+
+        ** `int * int -> int * int -> cellfmt -> builder -> builder` 型。
+
+        ** `set-fmt-` の範囲指定版。
+           `set-fmt-range (rs, cs) (re, ce) fmt` で、
+           `rs` 行 `cs` 列目にあるセルから右に `re` 個、
+           下に `ce` 個数えたところまでのセルの書式をまとめて `fmt` に変更します。
+
+      * `TableBuilder.convert-text-range` (alias: `EasyTableAlias.convert-text-range`)
+
+        ** `int * int -> int * int -> (inline-text -> inline-text) -> builder -> builder` 型。
+
+        ** `convert-text-range (rs, cs) (re, ce) convertf` で、
+           `rs` 行 `cs` 列目にあるセルから右に `re` 個、
+           下に `ce` 個数えたところまでのセルのテキストを`convertf` でまとめて変換します。
+           たとえば `convertf` に `(fun it -> {\emph{#it;}})` を指定すれば、
+           指定したセルのテキストがまるまる強調表示されるようになります。
+           「レイアウトの都合上ヘッダ部分には太字のフォントを用いたいが、
+           いちいち同じコマンドをセル毎に噛ませるのは面倒だ」という場合に便利です。
+
     }
 
   >%

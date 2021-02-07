@@ -36,8 +36,10 @@ module TableBuilder : sig
   val set-fmt : cellfmt Matrix.t -> builder -> builder
   val get-fmt- : int * int -> builder -> cellfmt option
   val set-fmt- : int * int -> cellfmt -> builder -> builder
-  % val get-text : int * int -> builder -> inline-text option
-  % val set-text : int * int -> inline-text -> builder -> builder
+  val get-text : builder -> inline-text Matrix.t
+  val set-text : inline-text Matrix.t -> builder -> builder
+  val get-text- : int * int -> builder -> inline-text option
+  val set-text- : int * int -> inline-text -> builder -> builder
   val get-rules : builder -> ruleptn list
   val set-rules : ruleptn list -> builder -> builder
 
@@ -62,6 +64,8 @@ module TableBuilder : sig
   % (rsize, csize) (int * int): 変更するセルの行数・列数。横2行、縦3列なら (2, 3)。
   % (rinit, cinit) (int * int): 変更するセルの左上端の位置。1始まり。
   val set-fmt-range : int * int -> int * int -> cellfmt -> builder -> builder
+
+  val convert-text-range : int * int -> int * int -> (inline-text -> inline-text) -> builder -> builder
 
 end = struct
 
@@ -157,18 +161,22 @@ end = struct
 
 % getter/setter
 
+  let get-fmt self = self#fmt
+  let set-fmt fmtmat self = (| self with fmt = fmtmat |)
+  let get-text self = self#text
+  let set-text textmat self = (| self with text = textmat |)
+  let get-rules self = self#rules
+  let set-rules rules self = (| self with rules = rules |)
+
   let get-fmt- (i, j) self = self#fmt |> Matrix.get (i - 1, j - 1)
   let set-fmt- (i, j) fmt self =
     let new-fmt = self#fmt |> Matrix.set (i - 1, j - 1) fmt in
     (| self with fmt = new-fmt |)
 
-  let get-fmt self = self#fmt
-
-  let set-fmt fmtmat self = (| self with fmt = fmtmat |)
-
-  let get-rules self = self#rules
-
-  let set-rules rules self = (| self with rules = rules |)
+  let get-text- (i, j) self = self#text |> Matrix.get (i - 1, j - 1)
+  let set-text- (i, j) text self =
+    let new-text = self#text |> Matrix.set (i - 1, j - 1) text in
+    (| self with text = new-text |)
 
 % rules
 
@@ -215,5 +223,19 @@ end = struct
     in
     set-fmt fmtmat self
 
+  let convert-text- idx textf self =
+    let new-text = self |> get-text-(idx) |> Option.from {} |> textf in
+    self |> set-text-(idx) new-text
+
+  let convert-text-range (rinit1, cinit1) (row-size, col-size) textf self =
+    let rinit = rinit1 - 1 in
+    let cinit = cinit1 - 1 in
+    let textf-id = (fun it -> it) |> Matrix.tile (self#text |> Matrix.shape) in
+    let textftile = textf |> Matrix.tile (row-size, col-size) in
+    let textfmat =
+      textf-id |> Matrix.embed (rinit, cinit) textftile
+    in
+    let new-text = Matrix.eachmap textfmat (self#text) in
+    self |> set-text new-text
 end
 

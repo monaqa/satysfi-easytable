@@ -31,6 +31,13 @@ let-block +example str bt =
     +block-frame(bt);
   >%
 
+let-inline ctx \emph inner =
+  let ctx-strong =
+    ctx |> set-font Latin StdJaBook.font-latin-italic
+        |> StdJaBook.set-cjk-font StdJaBook.font-cjk-gothic
+  in
+    read-inline ctx-strong inner
+
 let-block +desc item = '<
   +gendescription(|
     nextline = true;
@@ -46,13 +53,6 @@ let-inline ctx \br =
 
 let-inline ctx \br-skip skip =
   discretionary (- 1000) inline-nil ((inline-graphics 0pt 0pt skip (fun (x, y) -> [])) ++ inline-fil) inline-nil
-
-let-inline ctx \strong inner =
-  let ctx-strong =
-    ctx |> set-font Latin StdJaBook.font-latin-italic
-        |> StdJaBook.set-cjk-font StdJaBook.font-cjk-gothic
-  in
-    read-inline ctx-strong inner
 
 in
 
@@ -468,7 +468,7 @@ document (|
           merge (0, 3) (0, 4) c;
           merge (4, 1) (5, 2) c;
           merge (4, 4) (5, 4) r;
-          convert-text-range (0, 0) (5, 0) (fun it -> {\strong{#it;}});
+          convert-text-range (0, 0) (5, 0) (fun it -> {\emph{#it;}});
         ] [l; c; c; r; r] {
           | Program | Answer         || Time [ms]      |
           |         | case A | case B | case A | case B
@@ -489,7 +489,7 @@ document (|
           merge (4, 1) (5, 2) c;
           merge (4, 4) (5, 4) r;
           % merge (1, 1) (2, 1) l;
-          convert-text-range (0, 0) (5, 0) (fun it -> {\strong{#it;}});
+          convert-text-range (0, 0) (5, 0) (fun it -> {\emph{#it;}});
         ] [l; c; c; r; r] {
           | Program | Answer         || Time [ms]      |
           |         | case A | case B | case A | case B
@@ -526,8 +526,8 @@ document (|
       `convert-text-range (rs, cs) (re, ce) fmt` という関数を指定すると、
       `rs` 行 `cs` 列 (0-based) のセル及び
       `re` 行 `ce` 列 (0-based) のセルを対角線に持つような長方形状のブロックのテキストをまとめて変換することができます。
-      上の例では、\strong{Program} の列にあるセルがまとめて選択され、
-      `(fun it -> {\strong{#it;}})` という変換が一括で行われた結果、
+      上の例では、\emph{Program} の列にあるセルがまとめて選択され、
+      `(fun it -> {\emph{#it;}})` という変換が一括で行われた結果、
       該当するセルがすべて強調表示されています。
     }
 

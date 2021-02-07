@@ -463,18 +463,18 @@ document (|
           t; b; m 2; m 4;
           m ?:(1, 3) 1; m ?:(3, 5) 1;
         ]?:[
-          set-fmt-(4, 1) r;       % (4, 1) 番目のセルの書式を右揃えに変更
-          merge (1, 2) (1, 2) c;  % (1, 2) 番目のセルから1行2列を結合
-          merge (1, 4) (1, 2) c;  % (1, 4) 番目のセルから1行2列を結合
-          merge (5, 2) (2, 2) c;  % (5, 2) 番目のセルから2行2列を結合
-          merge (5, 5) (2, 1) r;  % (5, 5) 番目のセルから2行1列を結合（右揃え）
-          convert-text-range (1, 1) (6, 1) (fun it -> {\strong{#it;}});
+          set-fmt-(3, 0) r;
+          merge (0, 1) (0, 2) c;
+          merge (0, 3) (0, 4) c;
+          merge (4, 1) (5, 2) c;
+          merge (4, 4) (5, 4) r;
+          convert-text-range (0, 0) (5, 0) (fun it -> {\strong{#it;}});
         ] [l; c; c; r; r] {
           | Program | Answer         || Time [ms]      |
           |         | case A | case B | case A | case B
           | foldn   | Yes    | Yes    | ${4}   | ${16}
           | mc91    | No     | –      | ${24}  | –
-          | rev     | Yes    | Yes    | ${4}   | ${78}
+          | rev     | Yes    |        | ${4}   | ${78}
           | max     |        |        | ${8}   |
           |}
     ```)<%
@@ -483,13 +483,13 @@ document (|
           t; b; m 2; m 4;
           m ?:(1, 3) 1; m ?:(3, 5) 1;
         ]?:[
-          set-fmt-(4, 1) r;       % (4, 1) 番目のセルの書式を右揃えに変更
-          merge (1, 2) (1, 2) c;  % (1, 2) 番目のセルから1行2列を結合
-          merge (1, 4) (1, 2) c;  % (1, 4) 番目のセルから1行2列を結合
-          merge (5, 2) (2, 2) c;  % (5, 2) 番目のセルから2行2列を結合
-          merge (5, 5) (2, 1) r;  % (5, 5) 番目のセルから2行1列を結合（右揃え）
-          % merge (1, 1) (2, 1) l;  % (1, 1) 番目のセルから2行1列を結合（左揃え）
-          convert-text-range (1, 1) (6, 1) (fun it -> {\strong{#it;}});
+          set-fmt-(3, 0) r;
+          merge (0, 1) (0, 2) c;
+          merge (0, 3) (0, 4) c;
+          merge (4, 1) (5, 2) c;
+          merge (4, 4) (5, 4) r;
+          % merge (1, 1) (2, 1) l;
+          convert-text-range (0, 0) (5, 0) (fun it -> {\strong{#it;}});
         ] [l; c; c; r; r] {
           | Program | Answer         || Time [ms]      |
           |         | case A | case B | case A | case B
@@ -506,25 +506,26 @@ document (|
       上の例では、`\easytable` コマンドに `?:` から始まる2つのオプション引数を渡しています。
       `?:[t; b; ...]` という箇所は1番目のオプション引数であり、
       前の節で紹介したように罫線を指定します。
-      その次の `?:[set-fmt-(4, 1) r; ...]` という箇所は
+      その次の `?:[set-fmt-(3, 0) r; ...]` という箇所は
       「セルの書式設定をデフォルトから変更する」ための設定を並べたものです。
     }
     +p{
-      `set-fmt- (r, c) fmt` という関数を指定すると、 `r` 行 `c` 列のセルの書式を `fmt` へと変更することができます。
+      `set-fmt- (r, c) fmt` という関数を指定すると、 `r` 行 `c` 列 (0-based) のセルの書式を `fmt` へと変更することができます。
       上の例では 4行目の1列目にある `mc91` というテキストに `r` 形式を指定することで、
       本来は左揃えで表示されるはずのセルが右揃えで表示されています。
     }
     +p{
-      `merge (rinit, cinit) (rsize, csize) fmt` という関数を指定すると、
-      `rinit` 行 `cinit` 列のセルから右下方向に数えて `rsize` 行、 `csize` 列の数だけのセルを結合し、
+      `merge (rs, cs) (re, ce) fmt` という関数を指定すると、
+      `rs` 行 `cs` 列 (0-based) のセル及び
+      `re` 行 `ce` 列 (0-based) のセルを対角線に持つような長方形状のブロックを結合し、
       `fmt` 書式で表示することができます。
       上の例の `merge (5, 2) (2, 2) c` では、5行目の2列目にある `Yes` と書かれたセルが
       2行2列へと拡張され、さらに中央揃えにして表示されています。
     }
     +p{
-      `convert-text-range (rinit, cinit) (rsize, csize) fmt` という関数を指定すると、
-      `rinit` 行 `cinit` 列のセルから右下方向に数えて `rsize` 行、 `csize` 列の数だけのセルのテキストを
-      まとめて変換することができます。
+      `convert-text-range (rs, cs) (re, ce) fmt` という関数を指定すると、
+      `rs` 行 `cs` 列 (0-based) のセル及び
+      `re` 行 `ce` 列 (0-based) のセルを対角線に持つような長方形状のブロックのテキストをまとめて変換することができます。
       上の例では、\strong{Program} の列にあるセルがまとめて選択され、
       `(fun it -> {\strong{#it;}})` という変換が一括で行われた結果、
       該当するセルがすべて強調表示されています。
@@ -589,7 +590,7 @@ document (|
     +example(```
       +p{
         \easytable?:[t; b; m 1; v 2]
-        ?:[ merge (1, 1) (1, 2) c ]
+        ?:[ merge (0, 0) (0, 1) c ]
         [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; e]{
           | 日付  || 2020 年 の 祝 日
           |  1/|1  | 元 日
@@ -604,7 +605,7 @@ document (|
     ```)<%
       +p{
         \easytable?:[t; b; m 1; v 2]
-        ?:[ merge (1, 1) (1, 2) c ]
+        ?:[ merge (0, 0) (0, 1) c ]
         [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; eq-sp]{
           | 日付  || 2020 年 の 祝 日
           |  1/|1  | 元 日
@@ -843,8 +844,9 @@ document (|
 
         ** `int * int -> int * int -> cellfmt -> builder -> builder` 型。
         ** `merge (rs, cs) (re, ce) fmt` で、
-           `rs` 行 `cs` 列目にあるセルから右に `re` 個、下に `ce` 個数えたところまでのセルをまとめて結合します。
-           結合後のテキストは最も左上のセル、すなわちの`rs` 行 `cs` 列目にあるセルの中身が引き継がれ、
+           `(rs, cs)` 番地のセル（0-based index で上から数えて `rs` 番目、左から数えて `cs` 番目にあるセル）
+           及び `(re, ce)` 番地のセルを対角線に持つ長方形状のブロックをまとめて結合します。
+           結合後のテキストは最も左上のセル、すなわちの`(rs, cs)` 番地のセルの中身が引き継がれ、
            それ以外のセルに格納されていたテキストは全て無視されます\footnote{
              可読性を可能な限り損ねないよう、それ以外のセルには空白や空行のみを入れたほうが良いでしょう。
            }。
@@ -854,7 +856,7 @@ document (|
 
         ** `int * int -> cellfmt -> builder -> builder` 型。
 
-        ** `set-fmt- (r, c) fmt` で、 `r` 行 `c` 列目にあるセルの書式を `fmt` に変更します。
+        ** `set-fmt- (r, c) fmt` で、 `(r, c)` 番地のセルの書式を `fmt` に変更します。
            特定のセルのみ書式を変更したい場合に便利です。
            複数のセルの書式を塊で変更したい場合は後述の `set-fmt-range` を用いることができます。
 
@@ -864,16 +866,15 @@ document (|
 
         ** `set-fmt-` の範囲指定版。
            `set-fmt-range (rs, cs) (re, ce) fmt` で、
-           `rs` 行 `cs` 列目にあるセルから右に `re` 個、
-           下に `ce` 個数えたところまでのセルの書式をまとめて `fmt` に変更します。
+           `(rs, cs)` 番地のセル及び `(re, ce)` 番地のセルを対角線に持つ長方形状のブロックの書式をまとめて `fmt` に変更します。
 
       * `TableBuilder.convert-text-range` (alias: `EasyTableAlias.convert-text-range`)
 
         ** `int * int -> int * int -> (inline-text -> inline-text) -> builder -> builder` 型。
 
         ** `convert-text-range (rs, cs) (re, ce) convertf` で、
-           `rs` 行 `cs` 列目にあるセルから右に `re` 個、
-           下に `ce` 個数えたところまでのセルのテキストを`convertf` でまとめて変換します。
+           `(rs, cs)` 番地のセル及び `(re, ce)` 番地のセルを対角線に持つ長方形状のブロックのテキストを
+           `convertf` でまとめて変換します。
            たとえば `convertf` に `(fun it -> {\emph{#it;}})` を指定すれば、
            指定したセルのテキストがまるまる強調表示されるようになります。
            「レイアウトの都合上ヘッダ部分には太字のフォントを用いたいが、

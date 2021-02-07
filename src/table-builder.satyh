@@ -32,6 +32,7 @@ module TableBuilder : sig
   val build-simple : context -> builder -> inline-boxes
 
 % getter, setter
+  val shape: builder -> int * int
   val get-fmt : builder -> cellfmt Matrix.t
   val set-fmt : cellfmt Matrix.t -> builder -> builder
   val get-fmt- : int * int -> builder -> cellfmt option
@@ -101,6 +102,15 @@ end = struct
     rules: ruleptn list;
   |)
 
+  let shape self = self#fmt |> Matrix.shape
+
+  let convenient-idx (ridx, cidx) self =
+    let (rlen, clen) = self |> shape in
+    (
+      if ridx < 0 then rlen + ridx else ridx,
+      if cidx < 0 then clen + cidx else cidx
+    )
+
 % builder pattern
 
   let init mat =
@@ -168,14 +178,14 @@ end = struct
   let get-rules self = self#rules
   let set-rules rules self = (| self with rules = rules |)
 
-  let get-fmt- (i, j) self = self#fmt |> Matrix.get (i - 1, j - 1)
+  let get-fmt- (i, j) self = self#fmt |> Matrix.get (i, j)
   let set-fmt- (i, j) fmt self =
-    let new-fmt = self#fmt |> Matrix.set (i - 1, j - 1) fmt in
+    let new-fmt = self#fmt |> Matrix.set (i, j) fmt in
     (| self with fmt = new-fmt |)
 
-  let get-text- (i, j) self = self#text |> Matrix.get (i - 1, j - 1)
+  let get-text- (i, j) self = self#text |> Matrix.get (i, j)
   let set-text- (i, j) text self =
-    let new-text = self#text |> Matrix.set (i - 1, j - 1) text in
+    let new-text = self#text |> Matrix.set (i, j) text in
     (| self with text = new-text |)
 
 % rules
@@ -198,9 +208,11 @@ end = struct
     let fmtmat = fmtlst |> Matrix.copy-col col in
     set-fmt fmtmat self
 
-  let merge (rinit1, cinit1) (row-size, col-size) fmt self =
-    let rinit = rinit1 - 1 in
-    let cinit = cinit1 - 1 in
+  let merge (rfrom, cfrom) (rto, cto) fmt self =
+    let (rfrom, cfrom) = self |> convenient-idx (rfrom, cfrom) in
+    let (rto, cto) = self |> convenient-idx (rto, cto) in
+    let row-size = rto - rfrom + 1 in
+    let col-size = cto - cfrom + 1 in
     let multicell-fmt ctx it =
       match fmt ctx it with
       | NormalCell(pads, ib) -> MultiCell(row-size, col-size, pads, ib)
@@ -209,17 +221,19 @@ end = struct
     in
     let emptyfmtmat = empty-cellfmt |> Matrix.tile (row-size, col-size) in
     let fmtmat =
-      self#fmt |> Matrix.embed (rinit, cinit) emptyfmtmat
-               |> Matrix.set (rinit, cinit) multicell-fmt
+      self#fmt |> Matrix.embed (rfrom, cfrom) emptyfmtmat
+               |> Matrix.set (rfrom, cfrom) multicell-fmt
     in
     set-fmt fmtmat self
 
-  let set-fmt-range (rinit1, cinit1) (row-size, col-size) fmt self =
-    let rinit = rinit1 - 1 in
-    let cinit = cinit1 - 1 in
+  let set-fmt-range (rfrom, cfrom) (rto, cto) fmt self =
+    let (rfrom, cfrom) = self |> convenient-idx (rfrom, cfrom) in
+    let (rto, cto) = self |> convenient-idx (rto, cto) in
+    let row-size = rto - rfrom + 1 in
+    let col-size = cto - cfrom + 1 in
     let fmttile = fmt |> Matrix.tile (row-size, col-size) in
     let fmtmat =
-      self#fmt |> Matrix.embed (rinit, cinit) fmttile
+      self#fmt |> Matrix.embed (rfrom, cfrom) fmttile
     in
     set-fmt fmtmat self
 
@@ -227,13 +241,15 @@ end = struct
     let new-text = self |> get-text-(idx) |> Option.from {} |> textf in
     self |> set-text-(idx) new-text
 
-  let convert-text-range (rinit1, cinit1) (row-size, col-size) textf self =
-    let rinit = rinit1 - 1 in
-    let cinit = cinit1 - 1 in
+  let convert-text-range (rfrom, cfrom) (rto, cto) textf self =
+    let (rfrom, cfrom) = self |> convenient-idx (rfrom, cfrom) in
+    let (rto, cto) = self |> convenient-idx (rto, cto) in
+    let row-size = rto - rfrom + 1 in
+    let col-size = cto - cfrom + 1 in
     let textf-id = (fun it -> it) |> Matrix.tile (self#text |> Matrix.shape) in
     let textftile = textf |> Matrix.tile (row-size, col-size) in
     let textfmat =
-      textf-id |> Matrix.embed (rinit, cinit) textftile
+      textf-id |> Matrix.embed (rfrom, cfrom) textftile
     in
     let new-text = Matrix.eachmap textfmat (self#text) in
     self |> set-text new-text

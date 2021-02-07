@@ -3,7 +3,7 @@
 
 (library
   (name "easytable")
-  (version "1.1.0")
+  (version "1.1.1")
   (sources
     (
      (package "easytable.satyh" "./src/easytable.satyh")
@@ -17,7 +17,7 @@
 
 (libraryDoc
   (name "easytable-doc")
-  (version "1.1.0")
+  (version "1.1.1")
   (workingDirectory "doc")
   (build
     ((satysfi "easytable.saty" "-o" "easytable.pdf")))

@@ -1,5 +1,9 @@
 # History
 
+## 1.1.1 (2021-02-07)
+
+* fix `Satyristes`.
+
 ## 1.1.0 (2021-02-07)
 
 * add second optional argument to `\easytable` and `\list-table`

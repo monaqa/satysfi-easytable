@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "satysfi-easytable-doc"
-version: "1.1.0"
+version: "1.1.1"
 synopsis: "A SATySFi package to build simple tables"
 description: """A SATySFi package to build simple tables."""
 

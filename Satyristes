@@ -7,6 +7,7 @@
   (sources
     (
      (package "easytable.satyh" "./src/easytable.satyh")
+     (package "table-builder.satyh" "./src/table-builder.satyh")
      (package "matrix.satyg" "./src/matrix.satyg")))
   (opam "satysfi-easytable.opam")
   (dependencies

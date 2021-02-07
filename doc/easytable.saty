@@ -2,7 +2,6 @@
 @require: code
 @require: color
 @require: hdecoset
-% @require: math
 @require: enumitem/enumitem
 @import: ../src/easytable
 

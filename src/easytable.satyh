@@ -31,7 +31,6 @@ module EasyTable: sig
   val hmargin-ratio : float -> float -> cellfmt -> cellfmt
   val vmargin : length -> length -> cellfmt -> cellfmt
   val vmargin-ratio : float -> float -> cellfmt -> cellfmt
-  val with-ctx: (context -> context) -> cellfmt -> cellfmt
 
 % rule pattern
   val genrule: (point -> point -> graphics list) -> (int * int) -> (int * int) -> ruleptn
@@ -162,8 +161,6 @@ end = struct
       | MultiCell(i, j, pads, ib) ->
           MultiCell(i, j, pads, phantomf ib)
       | EmptyCell -> EmptyCell
-
-  let with-ctx ctxf cfmt ctx it = cfmt (ctxf ctx) it
 
 % rule pattern
 
@@ -339,7 +336,6 @@ module EasyTableAlias : sig
   val hmgnr : float -> float -> cellfmt -> cellfmt
   val vmgn : length -> length -> cellfmt -> cellfmt
   val vmgnr : float -> float -> cellfmt -> cellfmt
-  val with-ctx : (context -> context) -> cellfmt -> cellfmt
 
   % rule pattern
   val t : ruleptn
@@ -378,7 +374,6 @@ end = struct
   let hmgnr = EasyTable.hmargin-ratio
   let vmgn = EasyTable.vmargin
   let vmgnr = EasyTable.vmargin-ratio
-  let with-ctx = EasyTable.with-ctx
 
   let t = EasyTable.toprule
   let b = EasyTable.bottomrule

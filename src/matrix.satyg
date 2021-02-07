@@ -1,5 +1,4 @@
-
-@require: list
+@require: base/list-ext
 %% matrix (2-dimensional array)
 
 module Matrix : sig
@@ -13,10 +12,42 @@ module Matrix : sig
   val reshape: int -> 'a -> 'a t -> 'a t
   val shape: 'a t -> (int * int)
 
-  val get : int -> int -> 'a t -> 'a option
+  val get : int * int -> 'a t -> 'a option
+  val set : int * int -> 'a -> 'a t -> 'a t
 
-  % val copy-row: 'a list -> int -> 'a t
-  % val copy-col: 'a list -> int -> 'a t
+  % mat1 |> embed (i, j) mat2
+  % ある M * N 行列 mat1 に別の P * Q 行列 mat2 を埋め込む。
+  % もとの行列の (i, j) 番地から (i + P - 1, j + Q - 1) 番地にかけて埋め込まれる。
+  val embed : int * int -> 'a t -> 'a t -> 'a t
+
+  % [a1; a2; ...; aN] から
+  % [
+  %   [a1; a2; ...; aN];
+  %   ...
+  %   [a1; a2; ...; aN];
+  % ]
+  % を作成する。
+  val copy-row: int -> 'a list -> 'a t
+
+  % [a1; a2; ...; aN] から
+  % [
+  %   [a1; a1; ...; a1];
+  %   [a2; a2; ...; a2];
+  %   ...
+  %   [aN; aN; ...; aN];
+  % ]
+  % を作成する。
+  val copy-col: int -> 'a list -> 'a t
+
+  % a から
+  % [
+  %   [a; a; ...; a]
+  %   ...
+  %   [a; a; ...; a]
+  % ]
+  % を作成する。
+  val tile: int * int -> 'a -> 'a t
+
   val map: ('a -> 'b) -> 'a t -> 'b t
 
   % map の f が adjacent になった版．ただし，隣接は行方向．
@@ -92,11 +123,43 @@ end = struct
     else
       lst |> List.reverse |> List.nth (-idx - 1)
 
-  let get i j mtx =
+  let get (i, j) mtx =
     let row-i = mtx |> List.nth i in
     match row-i with
     | Some(row-i) -> (row-i |> List.nth j)
     | None -> None
+
+  % List の idx 番目の要素を v に変更した新たなリストを返す。
+  let set-nth idx v lst =
+    match lst |> List.nth idx with
+    | None -> lst  % その要素がなければ何も変更しない
+    | Some(_) ->
+        let (head, tail) = lst |> List.split-at idx in
+        let head = head |> List.take ((head |> List.length) - 2) in
+        List.concat [head; [v]; tail]
+
+  let embed-nth idx lst-dist lst-orig =
+    lst-orig |> List.mapi (
+      fun i elem -> Option.from elem (lst-dist |> List.nth (i - idx))
+    )
+
+  let set (i, j) v mtx =
+    let row = mtx |> List.nth i in
+    match row with
+    | None -> mtx
+    | Some(row) ->
+        let new-row = row |> set-nth j v in
+        mtx |> set-nth i new-row
+
+  let embed (idx-i, idx-j) mtx-dist mtx-orig =
+    mtx-orig |> List.mapi (
+      fun i row -> (
+        row |> List.mapi (
+          fun j elem -> Option.from elem (mtx-dist |> get (i - idx-i, j - idx-j))
+        )
+      )
+    )
+
 
   let map f mtx = List.map (List.map f) mtx
 
@@ -120,6 +183,15 @@ end = struct
   let vconcat mtx1 mtx2 = List.concat [mtx1; mtx2]
 
   let hconcat mtx1 mtx2 = map-each-list (List.map (fun x y -> List.concat [x; y]) mtx1) mtx2
+
+  let copy-row n lst =
+    lst |> List.repeat n
+
+  let copy-col n lst =
+    lst |> List.map (fun x -> x |> List.repeat n)
+
+  let tile (n-row, n-col) elem =
+    elem |> List.repeat n-col |> copy-row n-row
 
 
 end

@@ -36,3 +36,7 @@ by executing command `satysfi demo/demo.saty` on the terminal window.
 
 The container is created using [SATySFi's docker image](https://github.com/amutake/satysfi-docker),
 so you can install other packages via `opam` and `satyrographos` command.
+
+## Changelog
+
+See [HISTORY](./HISTORY.md).

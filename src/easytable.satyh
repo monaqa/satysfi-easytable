@@ -1,8 +1,9 @@
-@require: list
+@require: base/list-ext
 @require: gr
 @require: option
 @require: color
 @import: matrix
+@import: table-builder
 
 % 罫線のパターン．
 type ruleptn = length list -> length list -> graphics list
@@ -35,20 +36,22 @@ module EasyTable: sig
   val genrule: (point -> point -> graphics list) -> (int * int) -> (int * int) -> ruleptn
   val toprule: ruleptn
   val bottomrule: ruleptn
-  val midrule: int -> ruleptn
-  val vertrule: int -> ruleptn
-  val horizrule: int -> ruleptn
+  val midrule: (int * int)?-> int -> ruleptn
+  val vertrule: (int * int)?-> int -> ruleptn
+  val horizrule: (int * int)?-> int -> ruleptn
   val diagrule: (int * int) -> (int * int) -> ruleptn
   val outerframerule: ruleptn
   % val header-col-bg: color -> ruleptn
   val genbgcolor: color -> (int * int) -> (int * int) -> ruleptn
+  val stripe-row: int?-> color -> ruleptn
+  val stripe-col: int?-> color -> ruleptn
   val whole-bgcolor: color -> ruleptn
   val column-bgcolor: color -> int -> int -> ruleptn
   val row-bgcolor: color -> int -> int -> ruleptn
 
 % commands
-  direct \easytable: [(ruleptn list)?; (cellfmt list); (inline-text list)] inline-cmd
-  direct \list-table: [(ruleptn list)?; (cellfmt list); itemize] inline-cmd
+  direct \easytable: [(ruleptn list)?; ((TableBuilder.builder -> TableBuilder.builder) list)?; (cellfmt list); (inline-text list)] inline-cmd
+  direct \list-table: [(ruleptn list)?;((TableBuilder.builder -> TableBuilder.builder) list)?; (cellfmt list); itemize] inline-cmd
 
 end = struct
 
@@ -194,16 +197,21 @@ end = struct
 
   let toprule = genrule (simple-rule 1pt Color.black) (0, 0) (0, -1)
   let bottomrule = genrule (simple-rule 1pt Color.black) (-1, 0) (-1, -1)
-  let vertrule idx-col = genrule (simple-rule 0.5pt Color.black) (0, idx-col) (-1, idx-col)
-  let horizrule idx-row = genrule (simple-rule 0.5pt Color.black) (idx-row, 0) (idx-row, -1)
+  let vertrule ?:row idx-col =
+    let (row-s, row-e) = row |> Option.from (0, -1) in
+    genrule (simple-rule 0.5pt Color.black) (row-s, idx-col) (row-e, idx-col)
+  let horizrule ?:col idx-row =
+    let (col-s, col-e) = col |> Option.from (0, -1) in
+    genrule (simple-rule 0.5pt Color.black) (idx-row, col-s) (idx-row, col-e)
   let diagrule = genrule (simple-rule 0.5pt Color.black)
 
-  let midrule idx-row =
+  let midrule ?:col idx-row =
+    let (col-s, col-e) = col |> Option.from (0, -1) in
     % ちょっと短いラインにしてみる
     let short-rule (xi, yi) (xj, yj) =
       [stroke 0.5pt Color.black (Gr.line (xi +' 2pt, yi) (xj -' 2pt, yj))]
     in
-    genrule short-rule (idx-row, 0) (idx-row, -1)
+    genrule short-rule (idx-row, col-s) (idx-row, col-e)
 
   let outerframerule =
     % booktabs っぽくちょっと短いラインにしてみる
@@ -224,28 +232,68 @@ end = struct
   let column-bgcolor clr j1 j2 = genbgcolor clr (0, j1) (-1, j2)
   let row-bgcolor clr i1 i2 = genbgcolor clr (i1, 0) (i2, -1)
 
+  let range n1 n2 =
+    let-rec aux min max =
+      if min == max then [min] else min :: (aux (min + 1) max)
+    in
+    if n1 < n2 then (aux n1 n2) else (aux n2 n1)
+
+  let stripe-row ?:start-row clr xs ys =
+    let start-row = start-row |> Option.from 0 in
+    let gr row = genbgcolor clr (row, 0) (row + 1, -1) xs ys in
+    let takef idx = idx >= start-row && ( (idx - start-row) mod 2 == 0) in
+
+    (range 0 (List.length ys))
+      |> List.take-while takef
+      |> List.map gr
+      |> List.concat
+
+  let stripe-col ?:start-col clr xs ys =
+    let start-col = start-col |> Option.from 0 in
+    let gr col = genbgcolor clr (0, col) (-1, col + 1) xs ys in
+    let takef idx = idx >= start-col && ( (idx - start-col) mod 2 == 0) in
+
+    (range 0 (List.length xs))
+      |> List.take-while takef
+      |> List.map gr
+      |> List.concat
+
 % commands
 
-  let-inline ctx \easytable ?:rules-lst-opt cfmtlst it-vector =
-    let cell-converter-lst = cfmtlst |> List.map (fun f -> f ctx) in
-    let phantom-cell-converter-lst = cfmtlst |> List.map phantom |> List.map (fun f -> f ctx) in
-    let it-matrix = Matrix.from-list (List.length cfmtlst) {} it-vector in
-    let cell-matrix = Matrix.colmap (cell-converter-lst) it-matrix in
-    let phantom-cell-matrix = Matrix.colmap (phantom-cell-converter-lst) it-matrix in
+  % old impl
 
-    % 罫線の設定．
+  % let-inline ctx \easytable ?:rules-lst-opt cfmtlst it-vector =
+  %   let cell-converter-lst = cfmtlst |> List.map (fun f -> f ctx) in
+  %   let phantom-cell-converter-lst = cfmtlst |> List.map phantom |> List.map (fun f -> f ctx) in
+  %   let it-matrix = Matrix.from-list (List.length cfmtlst) {} it-vector in
+  %   let cell-matrix = Matrix.colmap (cell-converter-lst) it-matrix in
+  %   let phantom-cell-matrix = Matrix.colmap (phantom-cell-converter-lst) it-matrix in
+  % 
+  %   % 罫線の設定．
+  %   let default-rules-lst = [toprule;bottomrule; midrule 1;] in
+  %   let rules-lst = Option.from default-rules-lst rules-lst-opt in
+  %   let rulef = concat-ruleptn rules-lst in
+  % 
+  %   let ib-rule = tabular (Matrix.to-llist phantom-cell-matrix) rulef in
+  %   let ib-table = tabular (Matrix.to-llist cell-matrix) (fun _ _ -> []) in
+  %   let (w, h, d) = get-natural-metrics ib-table in
+  %   inline-graphics w h d (fun (x, y) -> [
+  %     draw-text (x, y) ib-rule;
+  %     draw-text (x, y) ib-table;
+  %   ])
+
+  let-inline ctx \easytable ?:rules-lst-opt ?:tbconvflst cfmtlst it-vector =
     let default-rules-lst = [toprule;bottomrule; midrule 1;] in
-    let rules-lst = Option.from default-rules-lst rules-lst-opt in
-    let rulef = concat-ruleptn rules-lst in
-
-    let ib-rule = tabular (Matrix.to-llist phantom-cell-matrix) rulef in
-    let ib-table = tabular (Matrix.to-llist cell-matrix) (fun _ _ -> []) in
-    let (w, h, d) = get-natural-metrics ib-table in
-    inline-graphics w h d (fun (x, y) -> [
-      draw-text (x, y) ib-rule;
-      draw-text (x, y) ib-table;
-    ])
-
+    let rules-lst = rules-lst-opt |> Option.from default-rules-lst in
+    let tbconvflst = tbconvflst |> Option.from [] in
+    let tbconvertf = tbconvflst |> List.fold-left (fun a b t -> b (a t)) (fun t -> t) in
+    TableBuilder.(
+    it-vector |> from-list (cfmtlst |> List.length)
+              |> align-col cfmtlst
+              |> tbconvertf
+              |> set-rules rules-lst
+              |> build ctx
+    )
 
   let itemize-to-it-matrix (Item(_, lst-item)) =
     let itemize-to-it-vector (Item(it, lst-item)) =
@@ -255,31 +303,25 @@ end = struct
     in
     Matrix.from-llist(List.map itemize-to-it-vector lst-item)
 
-  let-inline ctx \list-table ?:rules-lst-opt cfmtlst item =
-    let cell-converter-lst = cfmtlst |> List.map (fun f -> f ctx) in
-    let phantom-cell-converter-lst = cfmtlst |> List.map phantom |> List.map (fun f -> f ctx) in
-    let it-matrix = itemize-to-it-matrix item in
-    let cell-matrix = Matrix.colmap (cell-converter-lst) it-matrix in
-    let phantom-cell-matrix = Matrix.colmap (phantom-cell-converter-lst) it-matrix in
-
-    % 罫線の設定．
+  let-inline ctx \list-table ?:rules-lst-opt ?:tbconvflst cfmtlst item =
     let default-rules-lst = [toprule;bottomrule; midrule 1;] in
-    let rules-lst = Option.from default-rules-lst rules-lst-opt in
-    let rulef = concat-ruleptn rules-lst in
-
-    let ib-rule = tabular (Matrix.to-llist phantom-cell-matrix) rulef in
-    let ib-table = tabular (Matrix.to-llist cell-matrix) (fun _ _ -> []) in
-    let (w, h, d) = get-natural-metrics ib-table in
-    inline-graphics w h d (fun (x, y) -> [
-      draw-text (x, y) ib-rule;
-      draw-text (x, y) ib-table;
-    ])
+    let rules-lst = rules-lst-opt |> Option.from default-rules-lst in
+    let tbconvflst = tbconvflst |> Option.from [] in
+    let tbconvertf = tbconvflst |> List.fold-left (fun a b t -> b (a t)) (fun t -> t) in
+    TableBuilder.(
+      item |> from-itemize
+           |> align-col cfmtlst
+           |> tbconvertf
+           |> set-rules rules-lst
+           |> build ctx
+    )
 
 end
 
 
 module EasyTableAlias : sig
 
+  % cell format
   val l : cellfmt
   val c : cellfmt
   val r : cellfmt
@@ -289,23 +331,33 @@ module EasyTableAlias : sig
   val eq-sp : cellfmt
   val eq-wd : length -> cellfmt
 
+  % cell format converter
   val hmgn : length -> length -> cellfmt -> cellfmt
   val hmgnr : float -> float -> cellfmt -> cellfmt
   val vmgn : length -> length -> cellfmt -> cellfmt
   val vmgnr : float -> float -> cellfmt -> cellfmt
 
+  % rule pattern
   val t : ruleptn
   val b : ruleptn
-  val m : int -> ruleptn
-  val v : int -> ruleptn
-  val h : int -> ruleptn
+  val m : (int * int)?-> int -> ruleptn
+  val v : (int * int)?-> int -> ruleptn
+  val h : (int * int)?-> int -> ruleptn
   val d : (int * int) -> (int * int) -> ruleptn
 
   val bg-a : color -> ruleptn
   val bg-r : color -> int -> int -> ruleptn
   val bg-c : color -> int -> int -> ruleptn
+  val stripe-r : int ?-> color -> ruleptn
+  val stripe-c : int ?-> color -> ruleptn
 
   val rect : ruleptn
+
+  % table-builder converter
+  val merge: int * int -> int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
+  val set-fmt- : int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
+  val set-fmt-range : int * int -> int * int -> cellfmt -> TableBuilder.builder -> TableBuilder.builder
+  val convert-text-range : int * int -> int * int -> (inline-text -> inline-text) -> TableBuilder.builder -> TableBuilder.builder
 
 end = struct
 
@@ -335,5 +387,12 @@ end = struct
   let bg-a = EasyTable.whole-bgcolor
   let bg-r = EasyTable.row-bgcolor
   let bg-c = EasyTable.column-bgcolor
+  let stripe-r = EasyTable.stripe-row
+  let stripe-c = EasyTable.stripe-col
+
+  let merge = TableBuilder.merge
+  let set-fmt- = TableBuilder.set-fmt-
+  let set-fmt-range = TableBuilder.set-fmt-range
+  let convert-text-range = TableBuilder.convert-text-range
 
 end

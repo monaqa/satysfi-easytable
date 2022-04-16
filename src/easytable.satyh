@@ -50,8 +50,8 @@ module EasyTable: sig
   val row-bgcolor: color -> int -> int -> ruleptn
 
 % commands
-  direct \easytable: [(ruleptn list)?; ((TableBuilder.builder -> TableBuilder.builder) list)?; (cellfmt list); (inline-text list)] inline-cmd
-  direct \list-table: [(ruleptn list)?;((TableBuilder.builder -> TableBuilder.builder) list)?; (cellfmt list); itemize] inline-cmd
+  direct \easytable: [(ruleptn list)?; ((TableBuilder.builder -> TableBuilder.builder) list)?; cellfmt list; inline-text list] inline-cmd
+  direct \list-table: [(ruleptn list)?;((TableBuilder.builder -> TableBuilder.builder) list)?; cellfmt list; itemize] inline-cmd
 
 end = struct
 

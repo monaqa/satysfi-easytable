@@ -12,8 +12,7 @@
   (opam "satysfi-easytable.opam")
   (dependencies
     (
-     (base ())))
-  (compatibility ((satyrographos "0.0.1"))))
+     (base ()))))
 
 (libraryDoc
   (name "easytable-doc")

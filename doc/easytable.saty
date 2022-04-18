@@ -94,29 +94,27 @@ document (|
 
   +subsection{単純な表}<%
     +p{
-      本パッケージを用いて表を組むには、`\easytable` コマンドを用いて以下のようにします。
+      最も単純に表を組むには `+easytable` コマンドを用います。
+      ブロックテキスト中で用いることで、簡単に表を組むことができます。
     }
 
     +example(```
-        \easytable[l;c;r]{
-          | header1    | header2      | header3
-          | align left | align center | align right
-          | a          | b            | c
-          |}
+      +easytable[l;c;r]{
+        | header1    | header2      | header3
+        | align left | align center | align right
+        | a          | b            | c
+        |}
     ```)<%
-      +p{
-        \easytable[l;c;r]{
-          | header1    | header2      | header3
-          | align left | align center | align right
-          | a          | b            | c
-          |}
-      }
-
+    +easytable[l;c;r]{
+      | header1    | header2      | header3
+      | align left | align center | align right
+      | a          | b            | c
+      |}
     >%
 
     +p{
-      このように、非常に単純な構文で表を組むことができます。
-      `\easytable`は2つの必須引数を取り、1番目で各列の体裁、2番目で表の中身を指定します。
+      `+easytable` の API は上で示すように非常に単純です。
+      `+easytable`は2つの必須引数を取り、1番目で各列の体裁、2番目で表の中身を指定します。
       1番目は `cellfmt` と呼ばれる型のリストであり、
       ${n}番目の要素が「左から数えて${n}番目の列をどのように揃えるか」
       を表しています。
@@ -127,9 +125,10 @@ document (|
       内部で2次元の構造（リストのリスト）へと変換されて表となります。
       インラインテキストのリストは普通に書くならば `[{a}; {b}; {c}]` と表すことになりますが、
       \SATySFi; にはこれを `{|a|b|c|}` と表記する糖衣構文があります。
-      `\easytable` コマンドはこの構文を積極的に活用し、
+      `+easytable` コマンドはこの構文を積極的に活用し、
       Markdown や AsciiDoc のような軽量マークアップ言語に近い書き易さを実現しています。
     }
+
     +p{
       なお、改行を含めた余剰なスペースは単にコードの見やすさのために入れているだけであり、
       たとえば以下のように書いても結果は変わりません。
@@ -137,7 +136,7 @@ document (|
     }
 
     +code(```
-        \easytable[l;c;r]{| header1 | header2 | header3 | align left
+        +easytable[l;c;r]{| header1 | header2 | header3 | align left
         | align center | align right | a | b | c |}
     ```);
 
@@ -148,37 +147,61 @@ document (|
     }
 
     +p{
-      第2引数に渡すのはインラインテキストのリストですから、
+      `\easytable` は `+easytable` のインライン版であり、
+      任意のインラインテキスト中に表を埋め込むことができます。
+      引数は（後述するオプション引数も含めて）`+easytable` と一切変わりません。
+    }
+
+    +example(```
+      +p{
+        インライン中に埋め込まれた表：
+        \easytable[l;c;r]{
+          | header1    | header2      | header3
+          | align left | align center | align right
+          | a          | b            | c
+          |}
+      }
+    ```)<%
+      +p{
+        インライン中に埋め込まれた表：
+        \easytable[l;c;r]{
+          | header1    | header2      | header3
+          | align left | align center | align right
+          | a          | b            | c
+          |}
+      }
+    >%
+
+    +p{
+      `+easytable` や `\easytable` の第2引数に渡すのはインラインテキストのリストですから、
       インラインコマンドを用いた装飾や、数式の挿入も可能です。
       （使う機会があるかはともかく）表の入れ子もできます。
     }
 
     +example(```
-        \easytable[r; c]{
-          |       | 例
-          | Emph  | \emph{強調されたテキスト}
-          | Code  | \code(`some code`);
-          | Math  | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
-          | Inner table |
-          \easytable[l; r]{
-            | header 1 | header 2
-            | a        | b
-            |}
+      +easytable[r; c]{
+        |       | 例
+        | Emph  | \emph{強調されたテキスト}
+        | Code  | \code(`some code`);
+        | Math  | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
+        | Inner table |
+        \easytable[l; r]{
+          | header 1 | header 2
+          | a        | b
           |}
+        |}
     ```)<%
-      +p{
-        \easytable[r; c]{
-          |       | 例
-          | Emph  | \emph{強調されたテキスト}
-          | Code  | \code(`some code`);
-          | Math  | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
-          | Inner table |
-          \easytable[l; r]{
-            | header 1 | header 2
-            | a        | b
-            |}
+      +easytable[r; c]{
+        |       | 例
+        | Emph  | \emph{強調されたテキスト}
+        | Code  | \code(`some code`);
+        | Math  | ${x = \frac{\minus b \pm \sqrt{b^2 - 4ac}}{2a}}
+        | Inner table |
+        \easytable[l; r]{
+          | header 1 | header 2
+          | a        | b
           |}
-      }
+        |}
     >%
 
     +p{
@@ -191,19 +214,17 @@ document (|
     }
 
     +example(```
-        \easytable[l; lw 120pt; lw 120pt;]{
-          | Column 1 | Column 2   | Column 3
-          | 通常の列 | 横幅 120pt
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          |}
+      +easytable[l; lw 120pt; lw 120pt;]{
+        | Column 1 | Column 2   | Column 3
+        | 通常の列 | 横幅 120pt
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        |}
     ```)<%
-      +p{
-        \easytable[l; lw 120pt; lw 120pt;]{
-          | Column 1 | Column 2   | Column 3
-          | 通常の列 | 横幅 120pt
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          |}
-      }
+      +easytable[l; lw 120pt; lw 120pt;]{
+        | Column 1 | Column 2   | Column 3
+        | 通常の列 | 横幅 120pt
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        |}
     >%
 
     +p{
@@ -220,23 +241,21 @@ document (|
     }
 
     +example(```
-        \easytable[lw 120pt; cw 120pt; rw 120pt;]{
-          | Align left | Align center | Align right
-          | short text | short text   | short text
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          |}
+      +easytable[lw 120pt; cw 120pt; rw 120pt;]{
+        | Align left | Align center | Align right
+        | short text | short text   | short text
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        |}
     ```)<%
-      +p{
-        \easytable[lw 120pt; cw 120pt; rw 120pt;]{
-          | Align left | Align center | Align right
-          | short text | short text   | short text
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
-          |}
-      }
+      +easytable[lw 120pt; cw 120pt; rw 120pt;]{
+        | Align left | Align center | Align right
+        | short text | short text   | short text
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        | 横幅 120pt で、なおかつ横幅よりも長いテキストが入っている場合
+        |}
     >%
 
   >%
@@ -255,7 +274,7 @@ document (|
     }
 
     +p{
-      本パッケージで罫線を制御するには、`\easytable` コマンドにオプション引数を指定します。
+      本パッケージで罫線を制御するには、`+easytable` コマンドにオプション引数を指定します。
       この引数は `ruleptn` と呼ばれる型のリストを取り、
       ここに引きたい罫線を羅列することで幅広い種類の罫線を引くことができます。
       まず最も単純な場合として、オプション引数に空のリストを与えた場合を考えましょう。
@@ -263,23 +282,22 @@ document (|
     }
 
     +example(```
-        \easytable?:[][r; c; l]{
-          | How       | I       | want
-          | a         | drink   | alcoholic
-          | of        | course  | after
-          | the       | heavy   | lectures
-          | involving | quantum | mechanics
-          |}
+      +easytable?:[][r; c; l]{
+        | How       | I       | want
+        | a         | drink   | alcoholic
+        | of        | course  | after
+        | the       | heavy   | lectures
+        | involving | quantum | mechanics
+        |}
     ```)<%
-      +p{
-        \easytable?:[][r; c; l]{
-          | How       | I       | want
-          | a         | drink   | alcoholic
-          | of        | course  | after
-          | the       | heavy   | lectures
-          | involving | quantum | mechanics
-          |}
-      }
+      +easytable?:[][r; c; l]{
+        | How       | I       | want
+        | a         | drink   | alcoholic
+        | of        | course  | after
+        | the       | heavy   | lectures
+        | involving | quantum | mechanics
+        |}
+      
     >%
 
     +p{
@@ -289,25 +307,24 @@ document (|
     }
 
     +example(```
-        \easytable?:[t][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-        \easytable?:[t; b][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
+      +easytable?:[t][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
+      +easytable?:[t; b][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
     ```)<%
-      +p{
-        \easytable?:[t][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-        \easytable?:[t; b][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-      }
+      +easytable?:[t][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
+      +easytable?:[t; b][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
+      
     >%
 
     +p{
@@ -317,30 +334,28 @@ document (|
       ${n} 行目の真下に線が引かれます。
       また、負の数${\minus n}を指定したときは、
       最後から数えて ${n} 行目の真下に線が引かれます。
-      ちなみに `\easytable` のオプション引数を省略した場合は、
+      ちなみに `+easytable` のオプション引数を省略した場合は、
       `[t; b; m 1]` が設定されたときと等価な挙動を示します。
     }
 
     +example(```
-        \easytable?:[t; b; m 2][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-        \easytable?:[t; b; m (-2)][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
+      +easytable?:[t; b; m 2][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
+      +easytable?:[t; b; m (-2)][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
     ```)<%
-      +p{
-        \easytable?:[t; b; m 2][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-        \easytable?:[t; b; m (-2)][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-      }
+      +easytable?:[t; b; m 2][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
+      +easytable?:[t; b; m (-2)][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
     >%
 
     +p{
@@ -355,17 +370,15 @@ document (|
     }
 
     +example(```
-        \easytable?:[t; b; d (0, 0) (1, 1); d (3, 1) (1, -1)][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
+      +easytable?:[t; b; d (0, 0) (1, 1); d (3, 1) (1, -1)][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
     ```)<%
-      +p{
-        \easytable?:[t; b; d (0, 0) (1, 1); d (3, 1) (1, -1)][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-      }
+      +easytable?:[t; b; d (0, 0) (1, 1); d (3, 1) (1, -1)][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
     >%
 
     +p{
@@ -373,17 +386,15 @@ document (|
     }
 
     +example(```
-        \easytable?:[rect][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
+      +easytable?:[rect][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
     ```)<%
-      +p{
-        \easytable?:[rect][r; c; l]{
-          | How | I | want | a | drink | alcoholic | of | course
-          | after | the | heavy | lectures | involving | quantum | mechanics
-          |}
-      }
+      +easytable?:[rect][r; c; l]{
+        | How | I | want | a | drink | alcoholic | of | course
+        | after | the | heavy | lectures | involving | quantum | mechanics
+        |}
     >%
 
     +p{
@@ -449,55 +460,53 @@ document (|
 
     +p{
       上で示したような複雑な構造を持つ表を作成するには、
-      `\easytable` コマンドの2番目のオプション引数を用います。
+      `+easytable` コマンドの2番目のオプション引数を用います。
     }
 
     +example(```
-        \easytable?:[
-          t; b; m 2; m 4;
-          m ?:(1, 3) 1; m ?:(3, 5) 1;
-        ]?:[
-          set-fmt-(3, 0) r;
-          merge (0, 1) (0, 2) c;
-          merge (0, 3) (0, 4) c;
-          merge (4, 1) (5, 2) c;
-          merge (4, 4) (5, 4) r;
-          convert-text-range (0, 0) (5, 0) (fun it -> {\emph{#it;}});
-        ] [l; c; c; r; r] {
-          | Program | Answer         || Time [ms]      |
-          |         | case A | case B | case A | case B
-          | foldn   | Yes    | Yes    | ${4}   | ${16}
-          | mc91    | No     | –      | ${24}  | –
-          | rev     | Yes    |        | ${4}   | ${78}
-          | max     |        |        | ${8}   |
-          |}
+      +easytable?:[
+        t; b; m 2; m 4;
+        m ?:(1, 3) 1; m ?:(3, 5) 1;
+      ]?:[
+        set-fmt-(3, 0) r;
+        merge (0, 1) (0, 2) c;
+        merge (0, 3) (0, 4) c;
+        merge (4, 1) (5, 2) c;
+        merge (4, 4) (5, 4) r;
+      convert-text-range (0, 0) (5, 0) (fun it -> {\emph{#it;}});
+      ] [l; c; c; r; r] {
+        | Program | Answer         || Time [ms]      |
+        |         | case A | case B | case A | case B
+        | foldn   | Yes    | Yes    | ${4}   | ${16}
+        | mc91    | No     | –      | ${24}  | –
+        | rev     | Yes    |        | ${4}   | ${78}
+        | max     |        |        | ${8}   |
+        |}
     ```)<%
-      +p{
-        \easytable?:[
-          t; b; m 2; m 4;
-          m ?:(1, 3) 1; m ?:(3, 5) 1;
-        ]?:[
-          set-fmt-(3, 0) r;
-          merge (0, 1) (0, 2) c;
-          merge (0, 3) (0, 4) c;
-          merge (4, 1) (5, 2) c;
-          merge (4, 4) (5, 4) r;
-          % merge (1, 1) (2, 1) l;
-          convert-text-range (0, 0) (5, 0) (fun it -> {\emph{#it;}});
-        ] [l; c; c; r; r] {
-          | Program | Answer         || Time [ms]      |
-          |         | case A | case B | case A | case B
-          | foldn   | Yes    | Yes    | ${4}   | ${16}
-          | mc91    | No     | –      | ${24}  | –
-          | rev     | Yes    |        | ${4}   | ${78}
-          | max     |        |        | ${8}   |
-          |}
-      }
+      +easytable?:[
+        t; b; m 2; m 4;
+        m ?:(1, 3) 1; m ?:(3, 5) 1;
+      ]?:[
+        set-fmt-(3, 0) r;
+        merge (0, 1) (0, 2) c;
+        merge (0, 3) (0, 4) c;
+        merge (4, 1) (5, 2) c;
+        merge (4, 4) (5, 4) r;
+        % merge (1, 1) (2, 1) l;
+      convert-text-range (0, 0) (5, 0) (fun it -> {\emph{#it;}});
+      ] [l; c; c; r; r] {
+        | Program | Answer         || Time [ms]      |
+        |         | case A | case B | case A | case B
+        | foldn   | Yes    | Yes    | ${4}   | ${16}
+        | mc91    | No     | –      | ${24}  | –
+        | rev     | Yes    |        | ${4}   | ${78}
+        | max     |        |        | ${8}   |
+        |}
     >%
 
     +p{
       引数がだいぶややこしくなってきました。
-      上の例では、`\easytable` コマンドに `?:` から始まる2つのオプション引数を渡しています。
+      上の例では、`+easytable` コマンドに `?:` から始まる2つのオプション引数を渡しています。
       `?:[t; b; ...]` という箇所は1番目のオプション引数であり、
       前の節で紹介したように罫線を指定します。
       その次の `?:[set-fmt-(3, 0) r; ...]` という箇所は
@@ -529,13 +538,12 @@ document (|
 
   +subsection{その他の機能}<%
     +p{
-      長い文章を入れたい場合などは、
-      箇条書き形式で表に要素を入れることのできる
-      \code(`\list-table`); コマンドが便利です。
+      \code(`+list-table`); コマンドを用いると、箇条書きの構文を用いて表を組むことができます。
+      特に表の中に長い文章を入れたいときに重宝します。
     }
 
     +example(```
-      \list-table[r; lw 140pt; lw 120pt;]{
+      +list-table[r; lw 140pt; lw 120pt;]{
         *
           ** 言語
           ** 代表的なパングラム
@@ -553,28 +561,31 @@ document (|
           ** Some men interpret nine memos.
       }
     ```)<%
-      +p{
-        \list-table[r; lw 140pt; lw 120pt;]{
-          *
-            ** 言語
-            ** 代表的なパングラム
-            ** 代表的な回文
+      +list-table[r; lw 140pt; lw 120pt;]{
+        *
+          ** 言語
+          ** 代表的なパングラム
+          ** 代表的な回文
 
-          *
-            ** 日本語
-            ** いろはにほへとちりぬるを
-               わかよたれそつねならむ
-               うゐのおくやまけふこえて
-               あさきゆめみしゑひもせす
-            ** 長き夜の遠の睡りの皆目醒め波乗り船の音の良きかな
+        *
+          ** 日本語
+          ** いろはにほへとちりぬるを
+             わかよたれそつねならむ
+             うゐのおくやまけふこえて
+             あさきゆめみしゑひもせす
+          ** 長き夜の遠の睡りの皆目醒め波乗り船の音の良きかな
 
-          *
-            ** 英語
-            ** The quick brown fox jumps over the lazy dog.
-            ** Some men interpret nine memos.
-        }
+        *
+          ** 英語
+          ** The quick brown fox jumps over the lazy dog.
+          ** Some men interpret nine memos.
       }
     >%
+    +p{
+      `+list-table` も `+easytable` と同様に2種類のオプション引数をとることができます。
+      引数の型や意味は `+easytable` と変わりません。
+      また、インライン版の `\list-table` コマンドも存在し、同様の引数を取ることができます。
+    }
 
     +p{
       列の書式設定についてまだ説明していない機能が2つあるので、ここで紹介します。
@@ -582,8 +593,7 @@ document (|
     }
 
     +example(```
-      +p{
-        \easytable?:[t; b; m 1; v 2]
+      +easytable?:[t; b; m 1; v 2]
         ?:[ merge (0, 0) (0, 1) c ]
         [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; e]{
           | 日付  || 2020 年 の 祝 日
@@ -595,10 +605,8 @@ document (|
           | 11/|3  | 文 化 の 日
           | 11/|23 | 勤 労 感 謝 の 日
           |}
-      }
     ```)<%
-      +p{
-        \easytable?:[t; b; m 1; v 2]
+      +easytable?:[t; b; m 1; v 2]
         ?:[ merge (0, 0) (0, 1) c ]
         [r |> hmgn 10pt 0pt; l |> hmgn 0pt 10pt; eq-sp]{
           | 日付  || 2020 年 の 祝 日
@@ -610,8 +618,8 @@ document (|
           | 11/|3  | 文 化 の 日
           | 11/|23 | 勤 労 感 謝 の 日
           |}
-      }
     >%
+
     +p{
       1列目では列の設定を `r` ではなく `r |> hmgn 10pt 0pt` とすることで、
       単に右揃えなだけではなく、
@@ -643,14 +651,13 @@ document (|
     }
 
     +description<
-      +dd{ `\easytable?:[rule-pattern]?:[cell-convert][cell-format]{| contents |}` }<
+      +dd{ `+easytable?:[rule-pattern]?:[cell-convert][cell-format]{| contents |}` }<
 
         +pn{
           `{| contents |}` の内容を表にします。
         }
 
-        +pn{
-          \easytable[l; lw 120pt; l; lw 85pt;]{
+        +easytable[l; lw 120pt; l; lw 85pt;]{
           | 引数 | 型 | 種類 | 内容
           | `rule-pattern` | `ruleptn list`
           | Optional | 罫線の設定
@@ -661,17 +668,15 @@ document (|
           | `contents`     | `inline-text list`
           | Needed   | 表の中身
           |}
-        }
       >
 
-      +dd{ `\list-table?:[rule-pattern][cell-format]{* contents }` }<
+      +dd{ `+list-table?:[rule-pattern]?:[cell-convert][cell-format]{* contents }` }<
 
         +pn{
           `{* contents }` の内容を表にします。
         }
 
-        +pn{
-          \easytable[l; lw 120pt; l; lw 85pt;]{
+        +easytable[l; lw 120pt; l; lw 85pt;]{
           | 引数 | 型 | 種類 | 内容
           | `rule-pattern` | `ruleptn list`
           | Optional | 罫線の設定
@@ -682,9 +687,15 @@ document (|
           | `contents`     | `itemize`
           | Needed   | 表の中身
           |}
-        }
       >
 
+      +dd{ `\easytable?:[rule-pattern]?:[cell-convert][cell-format]{| contents |}` }<
+        +pn{ `+easytable` のインラインコマンド版。 }
+      >
+
+      +dd{ `\list-table?:[rule-pattern]?:[cell-convert][cell-format]{* contents }` }<
+        +pn{ `\list-table` のインラインコマンド版。 }
+      >
     >
 
   >%
@@ -816,7 +827,7 @@ document (|
 
   +subsection{罫線の設定}<%
     +p{
-      `\easytable` コマンドの1番目のオプション引数では、
+      `+easytable` などにおける1番目のオプション引数では、
       `ruleptn list` 型の値を指定することで罫線の引き方を指定することができます。
       `ruleptn` は `length list -> length list -> graphics list` 型のシノニムであり、
       この型の意味は tabular プリミティヴの第2引数とほぼ変わりません。
@@ -898,7 +909,7 @@ document (|
   +subsection{セル単位での書式設定}<%
 
     +p{
-      `\easytable` コマンドの2番目のオプション引数では、
+      `+easytable` などにおける2番目のオプション引数では、
       `(builder -> builder) list` 型の値を指定することで
       特定のセルの書式を変更したり、セルを結合したりといった操作ができるようになります。
       `builder` は正確には `TableBuilder.builder` という型であり、

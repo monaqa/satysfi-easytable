@@ -34,8 +34,8 @@ Try it in [Gitpod](https://gitpod.io)!
 You can freely edit the file `demo/demo.saty` and generate a PDF (`demo/demo.pdf`)
 by executing command `satysfi demo/demo.saty` on the terminal window.
 
-The container is created using [SATySFi's docker image](https://github.com/amutake/satysfi-docker),
-so you can install other packages via `opam` and `satyrographos` command.
+This demo uses [pickoba/gitpod-satysfi](https://github.com/pickoba/gitpod-satysfi)
+and you can also install other packages via `opam` / `satyrographos` command.
 
 ## Changelog
 

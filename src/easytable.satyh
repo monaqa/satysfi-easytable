@@ -50,8 +50,10 @@ module EasyTable: sig
   val row-bgcolor: color -> int -> int -> ruleptn
 
 % commands
-  direct \easytable: [(ruleptn list)?; ((TableBuilder.builder -> TableBuilder.builder) list)?; (cellfmt list); (inline-text list)] inline-cmd
-  direct \list-table: [(ruleptn list)?;((TableBuilder.builder -> TableBuilder.builder) list)?; (cellfmt list); itemize] inline-cmd
+  direct \easytable: [(ruleptn list)?; ((TableBuilder.builder -> TableBuilder.builder) list)?; cellfmt list; inline-text list] inline-cmd
+  direct +easytable: [(ruleptn list)?; ((TableBuilder.builder -> TableBuilder.builder) list)?; cellfmt list; inline-text list] block-cmd
+  direct \list-table: [(ruleptn list)?;((TableBuilder.builder -> TableBuilder.builder) list)?; cellfmt list; itemize] inline-cmd
+  direct +list-table: [(ruleptn list)?;((TableBuilder.builder -> TableBuilder.builder) list)?; cellfmt list; itemize] block-cmd
 
 end = struct
 
@@ -315,6 +317,28 @@ end = struct
            |> set-rules rules-lst
            |> build ctx
     )
+
+  let-block ctx +easytable ?:rules-lst-opt ?:tbconvflst cfmtlst it-vector =
+    let default-rules-lst = [toprule;bottomrule; midrule 1;] in
+    let rules-lst = rules-lst-opt |> Option.from default-rules-lst in
+    let tbconvflst = tbconvflst |> Option.from [] in
+    let ib-easytable =
+      read-inline ctx
+        {\easytable?:(rules-lst)?:(tbconvflst)(cfmtlst)(it-vector);}
+    in
+    let ib = inline-fil ++ ib-easytable ++ inline-fil in
+    line-break true true ctx ib
+
+  let-block ctx +list-table ?:rules-lst-opt ?:tbconvflst cfmtlst item =
+    let default-rules-lst = [toprule;bottomrule; midrule 1;] in
+    let rules-lst = rules-lst-opt |> Option.from default-rules-lst in
+    let tbconvflst = tbconvflst |> Option.from [] in
+    let ib-listtable =
+      read-inline ctx
+        {\list-table?:(rules-lst)?:(tbconvflst)(cfmtlst)(item);}
+    in
+    let ib = inline-fil ++ ib-listtable ++ inline-fil in
+    line-break true true ctx ib
 
 end
 

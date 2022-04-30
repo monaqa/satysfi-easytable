@@ -3,12 +3,9 @@
 
 (library
   (name "easytable")
-  (version "1.1.1")
+  (version "1.1.2")
   (sources
-    (
-     (package "easytable.satyh" "./src/easytable.satyh")
-     (package "table-builder.satyh" "./src/table-builder.satyh")
-     (package "matrix.satyg" "./src/matrix.satyg")))
+    ((packageDir "src")))
   (opam "satysfi-easytable.opam")
   (dependencies
     (
@@ -16,7 +13,7 @@
 
 (libraryDoc
   (name "easytable-doc")
-  (version "1.1.1")
+  (version "1.1.2")
   (workingDirectory "doc")
   (build
     ((satysfi "easytable.saty" "-o" "easytable.pdf")))

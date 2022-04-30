@@ -1,5 +1,11 @@
 # History
 
+## 1.1.2 (2022-04-30)
+
+* add commands
+  * `+easytable`
+  * `+list-table`
+
 ## 1.1.1 (2021-02-07)
 
 * fix `Satyristes`.
